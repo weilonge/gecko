@@ -332,6 +332,16 @@ this.SessionStore = {
   },
 
   /**
+   * Determines whether a given tab is currently in the process of being
+   * restored.
+   * @param  {<xul:tab>} tab   Tab to check
+   * @return {Boolean}         True if currently restoring
+   */
+  isTabRestoring(tab) {
+    return !!tab.linkedBrowser.__SS_restoreState;
+  },
+
+  /**
    * Determines whether the passed version number is compatible with
    * the current version number of the SessionStore.
    *
