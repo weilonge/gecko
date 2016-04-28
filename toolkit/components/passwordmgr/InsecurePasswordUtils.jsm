@@ -14,6 +14,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://devtools/shared/Loader.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
                                   "resource://gre/modules/LoginManagerContent.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
+                                   "@mozilla.org/contentsecuritymanager;1",
+                                   "nsIContentSecurityManager");
 XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
   return this.devtools.require("devtools/shared/webconsole/utils").Utils;
 });
@@ -92,24 +95,31 @@ this.InsecurePasswordUtils = {
       isSafePage = false;
     }
 
-    let isFormSubmitHTTP = false, isFormSubmitHTTPS = false;
+    let isFormSubmitHTTP = false, isFormSubmitSecure = false;
     if (aForm.rootElement instanceof Ci.nsIDOMHTMLFormElement) {
       // Note that aForm.action can be a relative path (e.g. "", "/login", "//example.com", etc.)
       // but we don't warn about those since we would have already warned about the form's document
       // not being safe above.
-      if (aForm.action.match(/^http:\/\//)) {
-        this._sendWebConsoleMessage("InsecureFormActionPasswordsPresent", domDoc);
-        this._formRootsWarned.set(aForm.rootElement, true);
+      let baseURI = Services.io.newURI(aForm.rootElement.baseURI, null, null);
+      let uri = Services.io.newURI(aForm.action, null, baseURI);
+      if (uri.schemeIs("http")) {
         isFormSubmitHTTP = true;
-      } else if (aForm.action.match(/^https:\/\//)) {
-        isFormSubmitHTTPS = true;
+        if (gContentSecurityManager.isURIPotentiallyTrustworthy(uri)) {
+          isFormSubmitSecure = true;
+        } else if (isSafePage) {
+          // Only warn about the action if we didn't already warn about the form being insecure.
+          this._sendWebConsoleMessage("InsecureFormActionPasswordsPresent", domDoc);
+          this._formRootsWarned.set(aForm.rootElement, true);
+        }
+      } else {
+        isFormSubmitSecure = true;
       }
     }
 
     // The safety of a password field determined by the form action and the page protocol
     let passwordSafety;
     if (isSafePage) {
-      if (isFormSubmitHTTPS) {
+      if (isFormSubmitSecure) {
         passwordSafety = 0;
       } else if (isFormSubmitHTTP) {
         passwordSafety = 1;
@@ -117,7 +127,7 @@ this.InsecurePasswordUtils = {
         passwordSafety = 2;
       }
     } else {
-      if (isFormSubmitHTTPS) {
+      if (isFormSubmitSecure) {
         passwordSafety = 3;
       } else if (isFormSubmitHTTP) {
         passwordSafety = 4;

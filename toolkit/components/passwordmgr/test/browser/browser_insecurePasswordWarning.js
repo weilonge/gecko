@@ -36,42 +36,41 @@ add_task(function* testInsecurePasswordWarning() {
   });
 
   for (let [origin, testFile, expectWarnings] of [
-    // Form action at 127.0.0.1/localhost is considered as a secure case.
-    // There should be no INSECURE_FORM_ACTION warning at 127.0.0.1/localhost.
-    // This will be fixed at Bug 1261234.
-    ["http://127.0.0.1", "form_basic.html", ["INSECURE_FORM_ACTION"]],
+    // TODO: add test for INSECURE_FORM_ACTION on secure page
+    // TODO: add test for relative form action
+    ["http://127.0.0.1", "form_basic.html", []],
     ["http://127.0.0.1", "formless_basic.html", []],
-    ["http://example.com", "form_basic.html", ["INSECURE_FORM_ACTION", "INSECURE_PAGE"]],
+    ["http://example.com", "form_basic.html", ["INSECURE_PAGE"]],
     ["http://example.com", "formless_basic.html", ["INSECURE_PAGE"]],
     ["https://example.com", "form_basic.html", []],
     ["https://example.com", "formless_basic.html", []],
   ]) {
-    let testUrlPath = origin + TEST_URL_PATH + testFile;
-    var promiseConsoleMessages = new Promise(resolve => {
+    let testURL = origin + TEST_URL_PATH + testFile;
+    let promiseConsoleMessages = new Promise(resolve => {
       warningPatternHandler = function (warning, originMessage) {
         ok(warning, "Handling a warning pattern");
-        let fullMessage = `[${warning.msg} {file: "${testUrlPath}" line: 0 column: 0 source: "0"}]`;
-        is(originMessage, fullMessage, "Message full matched:" + originMessage);
+        let fullMessage = `[${warning.msg} {file: "${testURL}" line: 0 column: 0 source: "0"}]`;
+        is(originMessage, fullMessage, "Message full matched: " + originMessage);
 
         let index = expectWarnings.indexOf(warning.key);
-        isnot(index, -1, "Found warning: " + warning.key + " for URL:" + testUrlPath);
+        isnot(index, -1, "Found warning: " + warning.key + " for URL: " + testURL);
         if (index !== -1) {
           // Remove the shown message.
           expectWarnings.splice(index, 1);
         }
         if (expectWarnings.length === 0) {
-          info("All warnings are shown. URL:" + testUrlPath);
+          info("All warnings are shown for URL: " + testURL);
           resolve();
         }
-      }
+      };
     });
 
     yield BrowserTestUtils.withNewTab({
       gBrowser,
-      url: testUrlPath
+      url: testURL
     }, function*() {
       if (expectWarnings.length === 0) {
-        info("All warnings are shown. URL:" + testUrlPath);
+        info("All warnings are shown for URL: " + testURL);
         return Promise.resolve();
       }
       return promiseConsoleMessages;
