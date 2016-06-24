@@ -291,10 +291,8 @@ function LoadSignons() {
   // disable "remove all signons" button if there are no signons
   if (signons.length == 0) {
     removeAllButton.setAttribute("disabled", "true");
-    togglePasswordsButton.setAttribute("disabled", "true");
   } else {
     removeAllButton.removeAttribute("disabled");
-    togglePasswordsButton.removeAttribute("disabled");
   }
 
   return true;
@@ -348,8 +346,10 @@ function SignonSelected() {
   let selections = GetTreeSelections();
   if (selections.length) {
     removeButton.removeAttribute("disabled");
+    togglePasswordsButton.removeAttribute("disabled");
   } else {
     removeButton.setAttribute("disabled", true);
+    togglePasswordsButton.setAttribute("disabled", true);
   }
 }
 
@@ -443,7 +443,11 @@ function TogglePasswordVisible() {
     showingPasswords = !showingPasswords;
     togglePasswordsButton.label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
     togglePasswordsButton.accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
-    document.getElementById("passwordCol").hidden = !showingPasswords;
+    if (showingPasswords) {
+      signonsTree.setAttribute("revealselectedpasswords", "true");
+    } else {
+      signonsTree.removeAttribute("revealselectedpasswords");
+    }
     FilterPasswords();
   }
 

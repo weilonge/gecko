@@ -153,7 +153,12 @@ add_task(function* test() {
             function runNextTest() {
                 let testCase = tests[testCounter++];
                 setFilter(testCase.filter);
-                setTimeout(runOneTest, 0, testCase);
+                function handleSelect() {
+                  tree.removeEventListener('select', handleSelect);
+                  setTimeout(runOneTest, 0, testCase);
+                }
+                tree.addEventListener('select', handleSelect);
+                view.selection.rangedSelect(0, 9, true);
             }
 
             runNextTest();

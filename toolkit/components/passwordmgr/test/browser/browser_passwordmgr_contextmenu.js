@@ -49,7 +49,7 @@ add_task(function* test() {
             assertMenuitemEnabled("copyusername", false, "empty username");
             assertMenuitemEnabled("editusername", true);
             assertMenuitemEnabled("copypassword", true);
-            assertMenuitemEnabled("editpassword", false, "password column hidden");
+            assertMenuitemEnabled("editpassword", true);
 
             info("Clear the selection");
             selection.clearSelection();
@@ -64,7 +64,7 @@ add_task(function* test() {
             assertMenuitemEnabled("copyusername", true);
             assertMenuitemEnabled("editusername", true);
             assertMenuitemEnabled("copypassword", true);
-            assertMenuitemEnabled("editpassword", true, "password column visible");
+            assertMenuitemEnabled("editpassword", true);
             menuitem.doCommand();
         }
 

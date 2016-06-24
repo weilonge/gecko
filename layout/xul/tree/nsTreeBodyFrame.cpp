@@ -3750,8 +3750,25 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   nsAutoString text;
   mView->GetCellText(aRowIndex, aColumn, text);
 
-  if (aColumn->Type() == nsITreeColumn::TYPE_PASSWORD) {
-    TextEditRules::FillBufWithPWChars(&text, text.Length());
+  nsCOMPtr<nsITreeSelection> selection;
+  bool isSelected = false;
+  mView->GetSelection(getter_AddRefs(selection));
+  if (selection) {
+    selection->IsSelected(aRowIndex, &isSelected);
+  }
+
+  nsIContent* baseContent = GetBaseElement();
+  bool revealSelectedPasswords = isSelected && baseContent &&
+       baseContent->HasAttr(kNameSpaceID_None, nsGkAtoms::revealSelectedPasswords);
+
+  if (aColumn->Type() == nsITreeColumn::TYPE_PASSWORD && !revealSelectedPasswords) {
+    // For the security reason, the amount of dot character should be fixed.
+    // Please see Bug 1209267 as well.
+    TextEditRules::FillBufWithPWChars(&text, 11);
+  }
+
+  if (selection) {
+    selection->InvalidateSelection();
   }
 
   // We're going to paint this text so we need to ensure bidi is enabled if

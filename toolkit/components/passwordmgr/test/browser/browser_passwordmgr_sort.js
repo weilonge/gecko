@@ -94,9 +94,14 @@ add_task(function* test() {
                     Services.obs.removeObserver(arguments.callee, aTopic);
                     func();
                 }
-            }, "passwordmgr-password-toggle-complete");
 
-            EventUtils.synthesizeMouse(toggleButton, 1, 1, {}, win);
+            }, "passwordmgr-password-toggle-complete");
+            function handleSelect() {
+              sTree.removeEventListener('select', handleSelect);
+              EventUtils.synthesizeMouse(toggleButton, 1, 1, {}, win);
+            }
+            sTree.addEventListener('select', handleSelect);
+            sTree.view.selection.rangedSelect(0, 9, true);
         }
 
         function clickCol(col) {
