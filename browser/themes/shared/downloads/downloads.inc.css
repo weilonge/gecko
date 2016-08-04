@@ -96,7 +96,6 @@
 }
 
 #downloadsSummaryChildBox {
-  -moz-margin-start: var(--summary-padding-start);
   -moz-margin-end: var(--summary-padding-end);
 }
 
