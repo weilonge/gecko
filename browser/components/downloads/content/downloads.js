@@ -1078,6 +1078,9 @@ DownloadsViewItem.prototype = {
   },
 
   isCommandEnabled(aCommand) {
+    console.log(aCommand);
+    console.trace();
+    console.log('======================');
     switch (aCommand) {
       case "downloadsCmd_open": {
         if (!this.download.succeeded) {
@@ -1113,6 +1116,9 @@ DownloadsViewItem.prototype = {
   },
 
   doCommand(aCommand) {
+    console.log(aCommand);
+    console.trace();
+    console.log('======================');
     if (this.isCommandEnabled(aCommand)) {
       this[aCommand]();
     }
@@ -1181,6 +1187,9 @@ DownloadsViewItem.prototype = {
   },
 
   downloadsCmd_doDefault() {
+    console.log(aCommand);
+    console.trace();
+    console.log('======================');
     let defaultCommand = this.currentDefaultCommandName;
     if (defaultCommand && this.isCommandEnabled(defaultCommand)) {
       this.doCommand(defaultCommand);
@@ -1212,35 +1221,51 @@ const DownloadsViewController = {
   //// nsIController
 
   supportsCommand(aCommand) {
+    console.log(aCommand);
+    console.trace();
+    console.log('======================');
     // Firstly, determine if this is a command that we can handle.
+    console.log('BB', 1);
     if (!DownloadsViewUI.isCommandName(aCommand)) {
+      console.log('BB', 2);
       return false;
     }
+    console.log('BB', 3);
     if (!(aCommand in this) &&
         !(aCommand in DownloadsViewItem.prototype)) {
+      console.log('BB', 4);
       return false;
     }
     // The currently supported commands depend on whether the blocked subview is
     // showing.  If it is, then take the following path.
+    console.log('BB', 5);
     if (DownloadsBlockedSubview.view.showingSubView) {
+      console.log('BB', 6);
       let blockedSubviewCmds = [
         "downloadsCmd_chooseOpen",
         "cmd_delete",
       ];
+      console.log('BB', 7, blockedSubviewCmds.indexOf(aCommand) >= 0);
       return blockedSubviewCmds.indexOf(aCommand) >= 0;
     }
     // If the blocked subview is not showing, then determine if focus is on a
     // control in the downloads list.
     let element = document.commandDispatcher.focusedElement;
+    console.log(element);
     while (element && element != DownloadsView.richListBox) {
       element = element.parentNode;
+      console.log(element);
     }
     // We should handle the command only if the downloads list is among the
     // ancestors of the focused element.
+    console.log('BB', 8, !!element);
     return !!element;
   },
 
   isCommandEnabled(aCommand) {
+    console.log(aCommand);
+    console.trace();
+    console.log('======================');
     // Handle commands that are not selection-specific.
     if (aCommand == "downloadsCmd_clearList") {
       return DownloadsCommon.getData(window).canRemoveFinished;
@@ -1253,6 +1278,9 @@ const DownloadsViewController = {
   },
 
   doCommand(aCommand) {
+    console.log(aCommand);
+    console.trace();
+    console.log('======================');
     // If this command is not selection-specific, execute it.
     if (aCommand in this) {
       this[aCommand]();

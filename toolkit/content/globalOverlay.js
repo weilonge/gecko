@@ -93,15 +93,28 @@ function goUpdateCommand(aCommand)
 
 function goDoCommand(aCommand)
 {
+  console.log(aCommand);
+  console.trace();
+  console.log('======================');
   try {
+    console.log('AA', 1);
     var controller = top.document.commandDispatcher
                         .getControllerForCommand(aCommand);
-    if (controller && controller.isCommandEnabled(aCommand))
+    console.log('AA', 2);
+    console.log(controller);
+    if (controller && controller.isCommandEnabled(aCommand)) {
+      console.log('AA', 3);
       controller.doCommand(aCommand);
+      console.log('AA', 4);
+    } else {
+      console.log('AA', 5);
+    }
   }
   catch (e) {
+    console.log('AA', 6);
     Components.utils.reportError("An error occurred executing the " +
                                  aCommand + " command: " + e);
+    console.log('AA', 7);
   }
 }
 
