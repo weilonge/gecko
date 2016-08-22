@@ -78,6 +78,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
+const PREF_SHOW_DROPMARKER = "browser.download.panel.dropmarker";
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsPanel
 
@@ -1201,11 +1203,49 @@ const DownloadsViewController = {
   //// Initialization and termination
 
   initialize() {
+    this._prefSvc.addObserver(PREF_SHOW_DROPMARKER, this, false);
+    this._toggleDropmarker(this._prefSvc.getBoolPref(PREF_SHOW_DROPMARKER));
     window.controllers.insertControllerAt(0, this);
   },
 
   terminate() {
+    this._prefSvc.removeObserver(PREF_SHOW_DROPMARKER, this);
     window.controllers.removeController(this);
+  },
+
+  _prefSvc      : Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefBranch),
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsISupports
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIObserver)) {
+      return this;
+    }
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsIObserver
+
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic == "nsPref:changed") {
+      this._toggleDropmarker(this._prefSvc.getBoolPref(PREF_SHOW_DROPMARKER));
+    }
+  },
+
+  _toggleDropmarker: function (enable) {
+    let downloadsFooterButtons =
+      document.getElementById('downloadsFooterButtons');
+    if (enable) {
+      downloadsFooterButtons.classList.remove("disableDownloadsDropmarker");
+    } else {
+      downloadsFooterButtons.classList.add("disableDownloadsDropmarker");
+    }
+
   },
 
   //////////////////////////////////////////////////////////////////////////////

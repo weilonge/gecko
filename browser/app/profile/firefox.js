@@ -328,6 +328,8 @@ pref("browser.download.folderList", 1);
 pref("browser.download.manager.addToRecentDocs", true);
 pref("browser.download.manager.resumeOnWakeDelay", 10000);
 
+pref("browser.download.panel.dropmarker", true);
+
 // This allows disabling the animated notifications shown by
 // the Downloads Indicator when a download starts or completes.
 pref("browser.download.animateNotifications", true);
