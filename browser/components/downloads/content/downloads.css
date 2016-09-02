@@ -221,10 +221,7 @@ richlistitem.download button {
 /* Hide the buttons of all downloads except the one that triggered the
    subview. */
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state:not([showingsubview]) .downloadButton {
-  display: none;
-}
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton {
-  display: inline;
+  visibility: hidden;
 }
 
 /* For the download that triggered the subview, move its button farther to the
