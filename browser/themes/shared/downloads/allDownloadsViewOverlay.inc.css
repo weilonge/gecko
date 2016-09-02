@@ -84,5 +84,96 @@
   margin: 3px;
   border: none;
   padding: 5px;
-  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
+}
+
+.downloadButton > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/*** Button icons ***/
+
+.downloadButton.downloadIconCancel {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#cancel");
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconCancel {
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconCancel:hover {
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconCancel:active {
+  fill: rgb(142, 142, 142);
+}
+@itemFocused@ .downloadButton.downloadIconCancel {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconCancel {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconCancel:hover {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconCancel:active {
+  fill: HighlightText;
+}
+
+.downloadButton.downloadIconShow {
+%ifdef XP_MACOSX
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#magnifier");
+%else
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#folder");
+%endif
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconShow {
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconShow:hover {
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconShow:active {
+  fill: rgb(142, 142, 142);
+}
+@itemFocused@ .downloadButton.downloadIconShow {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconShow {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconShow:hover {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconShow:active {
+  fill: HighlightText;
+}
+
+.downloadButton.downloadIconRetry {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconRetry {
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconRetry:hover {
+  fill: rgb(142, 142, 142);
+}
+@item@:hover .downloadButton.downloadIconRetry:active {
+  fill: rgb(142, 142, 142);
+}
+@itemFocused@ .downloadButton.downloadIconRetry {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconRetry {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconRetry:hover {
+  fill: HighlightText;
+}
+@itemFocused@:hover .downloadButton.downloadIconRetry:active {
+  fill: HighlightText;
 }
