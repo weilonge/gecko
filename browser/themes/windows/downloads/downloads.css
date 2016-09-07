@@ -110,8 +110,12 @@
               color var(--panelui-subview-transition-duration);
 }
 
-@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
-@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover:active,
+@notKeyfocus@ @itemDirty@[verdict="Malware"] {
+  color: hsl(4, 82%, 47%);
+}
+
+@notKeyfocus@ @itemDirty@[verdict="Malware"]:hover,
+@notKeyfocus@ @itemDirty@[verdict="Malware"]:hover:active,
 @item@[showingsubview][verdict="Malware"] {
   background-color: hsl(4, 82%, 47%);
   color: white;
@@ -121,10 +125,7 @@
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
   @notKeyfocus@ @itemFinished@[exists]:hover {
-    border-radius: 3px;
     outline: 0;
-    border-top: 1px solid hsla(0,0%,100%,.2);
-    border-bottom: 1px solid hsla(0,0%,0%,.2);
     background-color: Highlight;
     color: HighlightText;
   }

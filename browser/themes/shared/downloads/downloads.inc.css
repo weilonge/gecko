@@ -9,6 +9,7 @@
 %define item richlistitem[type="download"]
 %define itemFinished @item@[state="1"]
 %define itemNotFinished @item@:not([state="1"])
+%define itemDirty @item@[state="8"]
 %define itemFocused #downloadsListBox:focus > @item@[selected]
 
 /*** Panel and outer controls ***/
@@ -25,7 +26,7 @@
 
 #downloadsListBox {
   background: transparent;
-  padding: 4px;
+  padding: 0;
   color: inherit;
   -moz-appearance: none;
   margin: 0;
@@ -45,12 +46,21 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.downloadsPanelFooter toolbarseparator {
+.downloadsPanelFooter toolbarseparator,
+richlistitem[type="download"] toolbarseparator {
   margin: 0;
   border: 0;
   min-width: 0;
   border-left: 1px solid var(--panel-separator-color);
   -moz-appearance: none;
+}
+
+richlistitem[type="download"]:hover {
+  background-color: #ebebeb;
+}
+
+richlistitem[type="download"]:hover toolbarseparator {
+  height: var(--downloads-item-height);
 }
 
 .downloadsPanelFooterButton {
@@ -176,18 +186,20 @@ richlistitem[type="download"] {
 
 richlistitem[type="download"] {
   margin: 0;
-  border-top: 1px solid var(--downloads-item-border-top-color);
   border-bottom: 1px solid var(--downloads-item-border-bottom-color);
   background: transparent;
-  padding: 8px;
-}
-
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
+  padding: 0;
 }
 
 richlistitem[type="download"]:last-child {
-  border-bottom: 1px solid transparent;
+  border-bottom: none;
+}
+
+richlistitem[type="download"] > .item-info-box {
+  height: var(--downloads-item-height);
+  padding-inline-end: 0;
+  padding: 8px;
+  -moz-box-align: center;
 }
 
 .downloadTypeIcon {
@@ -214,6 +226,10 @@ richlistitem[type="download"]:last-child {
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {
   background-image: url("chrome://browser/skin/info.svg");
+}
+
+@itemDirty@[verdict="Malware"] {
+  color: hsl(4, 82%, 47%);
 }
 
 /* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
@@ -252,19 +268,24 @@ richlistitem[type="download"]:last-child {
   cursor: inherit;
 }
 
+richlistitem[type="download"] toolbarseparator {
+  min-height: 50px;
+}
+
 .downloadButton {
   -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
+  min-width: 58px;
+  height: var(--downloads-item-height);
+  margin: 0;
   border: none;
   background: transparent;
-  padding: 5px;
+  padding: 8px;
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
 }
 
-.downloadButton > .button-box {
-  padding: 0;
+richlistitem[type="download"] .downloadButton:hover,
+richlistitem[type="download"] .item-info-box:hover {
+  background-color: hsla(0, 0%, 0%, .05);
 }
 
 

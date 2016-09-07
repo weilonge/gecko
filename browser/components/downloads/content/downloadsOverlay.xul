@@ -125,7 +125,6 @@
                        mousethrough="always">
              &downloadsPanelEmpty.label;
           </description>
-          <spacer flex="1"/>
           <vbox id="downloadsFooter"
                 class="downloadsPanelFooter">
             <stack>
