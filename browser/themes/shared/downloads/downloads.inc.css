@@ -277,15 +277,9 @@ richlistitem[type="download"]:last-child {
 @item@:hover .downloadButton:active > .button-box {
   background-color: rgb(44, 44, 44);
 }
-@keyfocus@ @itemFocused@ .downloadButton > .button-box {
-  background-color: transparent;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton > .button-box {
-  background-color: transparent;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton:hover > .button-box {
-  background-color: transparent;;
-}
+@keyfocus@ @itemFocused@ .downloadButton > .button-box,
+@keyfocus@ @itemFocused@:hover .downloadButton > .button-box,
+@keyfocus@ @itemFocused@:hover .downloadButton:hover > .button-box,
 @keyfocus@ @itemFocused@:hover .downloadButton:active > .button-box {
   background-color: transparent;
 }
@@ -294,6 +288,8 @@ richlistitem[type="download"]:last-child {
   width: 16px;
   height: 16px;
   margin: 1px;
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: rgb(142, 142, 142);
 }
 
 .downloadButton > .button-box > .button-text {
@@ -305,29 +301,6 @@ richlistitem[type="download"]:last-child {
 
 .downloadButton.downloadIconCancel .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#cancel");
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(142, 142, 142);
-}
-@item@:hover .downloadButton.downloadIconCancel .button-icon {
-  fill: HighlightText;
-}
-@item@:hover .downloadButton.downloadIconCancel:hover .button-icon {
-  fill: HighlightText;
-}
-@item@:hover .downloadButton.downloadIconCancel:active .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@ .downloadButton.downloadIconCancel .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconCancel .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconCancel:hover .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconCancel:active .button-icon {
-  fill: HighlightText;
 }
 
 .downloadButton.downloadIconShow .button-icon {
@@ -336,93 +309,35 @@ richlistitem[type="download"]:last-child {
 %else
   list-style-image: url("chrome://browser/skin/panel-icons.svg#folder");
 %endif
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(142, 142, 142);
-}
-@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow .button-icon,
-@keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow .button-icon {
-  fill: HighlightText;
-}
-@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:hover .button-icon,
-@keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:hover .button-icon {
-  fill: HighlightText;
-}
-@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:active .button-icon,
-@keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:active .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@ .downloadButton.downloadIconShow .button-icon {
-  fill: HighlightText;
-}
-@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow .button-icon,
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconShow .button-icon {
-  fill: HighlightText;
-}
-@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow:hover .button-icon,
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconShow:hover .button-icon {
-  fill: HighlightText;
-}
-@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow:active .button-icon,
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconShow:active .button-icon {
-  fill: HighlightText;
 }
 
 .downloadButton.downloadIconRetry .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(142, 142, 142);
-}
-@item@:hover .downloadButton.downloadIconRetry .button-icon {
-  fill: HighlightText;
-}
-@item@:hover .downloadButton.downloadIconRetry:hover .button-icon {
-  fill: HighlightText;
-}
-@item@:hover .downloadButton.downloadIconRetry:active .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@ .downloadButton.downloadIconRetry .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconRetry .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconRetry:hover .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadIconRetry:active .button-icon {
-  fill: HighlightText;
 }
 
 .downloadButton.downloadShowBlockedInfo .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-right");
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(142, 142, 142);
 }
 .downloadButton.downloadShowBlockedInfo .button-icon:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-left");
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(142, 142, 142);
 }
-@item@:hover .downloadButton.downloadShowBlockedInfo .button-icon {
-  fill: HighlightText;
-}
-@item@:hover .downloadButton.downloadShowBlockedInfo:hover .button-icon {
-  fill: HighlightText;
-}
-@item@:hover .downloadButton.downloadShowBlockedInfo:active .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@ .downloadButton.downloadShowBlockedInfo .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:hover .button-icon {
-  fill: HighlightText;
-}
-@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:active .button-icon {
+
+@item@:hover .downloadButton .button-icon,
+@item@:hover .downloadButton:hover .button-icon,
+@item@:hover .downloadButton:active .button-icon,
+@keyfocus@ @itemFocused@ .downloadButton .button-icon,
+@keyfocus@ @itemFocused@:hover .downloadButton .button-icon,
+@keyfocus@ @itemFocused@:hover .downloadButton:hover .button-icon,
+@keyfocus@ @itemFocused@:hover .downloadButton:active .button-icon,
+@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow .button-icon,
+@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:hover .button-icon,
+@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:active .button-icon,
+@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow .button-icon,
+@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow:hover .button-icon,
+@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow:active .button-icon,
+@keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow .button-icon,
+@keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:hover .button-icon,
+@keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:active .button-icon {
   fill: HighlightText;
 }
 
