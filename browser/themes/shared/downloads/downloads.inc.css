@@ -145,7 +145,6 @@ toolbarseparator.downloadsDropmarkerSplitter {
 
 #downloadsSummary {
   padding: 0 12px;
-  cursor: pointer;
   -moz-user-focus: normal;
 }
 
@@ -238,7 +237,6 @@ richlistitem[type="download"]:last-child {
 #downloadsSummaryDescription,
 .downloadTarget {
   margin-bottom: var(--downloads-item-target-margin-bottom);
-  cursor: inherit;
 }
 
 .downloadTarget {
@@ -249,7 +247,6 @@ richlistitem[type="download"]:last-child {
 .downloadDetails {
   margin-top: var(--downloads-item-details-margin-top);
   opacity: var(--downloads-item-details-opacity);
-  cursor: inherit;
 }
 
 .downloadButton {
