@@ -32,6 +32,34 @@
             src="chrome://browser/content/abouthome/aboutHome.js"/>
     <script type="text/javascript;version=1.8"
             src="chrome://browser/content/contentSearchUI.js"/>
+    <style>
+      .container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .container > div {
+        order: 1;
+      }
+      .container > div:hover {
+        background-color: red;
+      }
+      .container > div > div.colorBox {
+        width: 80%;
+        margin: 0 10%;
+        height: 20px;
+        border-style: solid;
+        border-width: 5px;
+        border-right-color: #ffffff;
+        border-top-color: #ffffff;
+        border-left-color: #000000;
+        border-bottom-color: #000000;
+        margin-bottom: 20px;
+        text-shadow: 0px 0px 30px #898989, 0 0 1em white, 0 0 0.2em white;
+        padding: 10px;
+        min-width: 250px;
+      }
+    </style>
   </head>
 
   <body dir="&locale.dir;">
@@ -55,6 +83,195 @@
         </div>
         <span id="rightsSnippet" hidden="true">&abouthome.rightsSnippet;</span>
         <div id="snippets"/>
+        <div class="container">
+          <div id="eColorID_activeborder">
+            <div style="background-color: activeborder" class="colorBox">activeborder</div>
+          </div>
+          <div id="eColorID_activecaption">
+            <div style="background-color: activecaption" class="colorBox">activecaption</div>
+          </div>
+          <div id="eColorID_appworkspace">
+            <div style="background-color: appworkspace" class="colorBox">appworkspace</div>
+          </div>
+          <div id="eColorID_background">
+            <div style="background-color: background" class="colorBox">background</div>
+          </div>
+          <div id="eColorID_buttonface">
+            <div style="background-color: buttonface" class="colorBox">buttonface</div>
+          </div>
+          <div id="eColorID_buttonhighlight">
+            <div style="background-color: buttonhighlight" class="colorBox">buttonhighlight</div>
+          </div>
+          <div id="eColorID_buttonshadow">
+            <div style="background-color: buttonshadow" class="colorBox">buttonshadow</div>
+          </div>
+          <div id="eColorID_buttontext">
+            <div style="background-color: buttontext" class="colorBox">buttontext</div>
+          </div>
+          <div id="eColorID_captiontext">
+            <div style="background-color: captiontext" class="colorBox">captiontext</div>
+          </div>
+          <div id="eColorID_graytext">
+            <div style="background-color: graytext" class="colorBox">graytext</div>
+          </div>
+          <div id="eColorID_highlight">
+            <div style="background-color: highlight" class="colorBox">highlight</div>
+          </div>
+          <div id="eColorID_highlighttext">
+            <div style="background-color: highlighttext" class="colorBox">highlighttext</div>
+          </div>
+          <div id="eColorID_inactiveborder">
+            <div style="background-color: inactiveborder" class="colorBox">inactiveborder</div>
+          </div>
+          <div id="eColorID_inactivecaption">
+            <div style="background-color: inactivecaption" class="colorBox">inactivecaption</div>
+          </div>
+          <div id="eColorID_inactivecaptiontext">
+            <div style="background-color: inactivecaptiontext" class="colorBox">inactivecaptiontext</div>
+          </div>
+          <div id="eColorID_infobackground">
+            <div style="background-color: infobackground" class="colorBox">infobackground</div>
+          </div>
+          <div id="eColorID_infotext">
+            <div style="background-color: infotext" class="colorBox">infotext</div>
+          </div>
+          <div id="eColorID_menu">
+            <div style="background-color: menu" class="colorBox">menu</div>
+          </div>
+          <div id="eColorID_menutext">
+            <div style="background-color: menutext" class="colorBox">menutext</div>
+          </div>
+          <div id="eColorID_scrollbar">
+            <div style="background-color: scrollbar" class="colorBox">scrollbar</div>
+          </div>
+          <div id="eColorID_threeddarkshadow">
+            <div style="background-color: threeddarkshadow" class="colorBox">threeddarkshadow</div>
+          </div>
+          <div id="eColorID_threedface">
+            <div style="background-color: threedface" class="colorBox">threedface</div>
+          </div>
+          <div id="eColorID_threedhighlight">
+            <div style="background-color: threedhighlight" class="colorBox">threedhighlight</div>
+          </div>
+          <div id="eColorID_threedlightshadow">
+            <div style="background-color: threedlightshadow" class="colorBox">threedlightshadow</div>
+          </div>
+          <div id="eColorID_threedshadow">
+            <div style="background-color: threedshadow" class="colorBox">threedshadow</div>
+          </div>
+          <div id="eColorID_window">
+            <div style="background-color: window" class="colorBox">window</div>
+          </div>
+          <div id="eColorID_windowframe">
+            <div style="background-color: windowframe" class="colorBox">windowframe</div>
+          </div>
+          <div id="eColorID_windowtext">
+            <div style="background-color: windowtext" class="colorBox">windowtext</div>
+          </div>
+          <div id="eColorID__moz_buttondefault">
+            <div style="background-color: -moz-buttondefault" class="colorBox">-moz-buttondefault</div>
+          </div>
+          <div id="eColorID__moz_field">
+            <div style="background-color: -moz-field" class="colorBox">-moz-field</div>
+          </div>
+          <div id="eColorID__moz_fieldtext">
+            <div style="background-color: -moz-fieldtext" class="colorBox">-moz-fieldtext</div>
+          </div>
+          <div id="eColorID__moz_dialog">
+            <div style="background-color: -moz-dialog" class="colorBox">-moz-dialog</div>
+          </div>
+          <div id="eColorID__moz_dialogtext">
+            <div style="background-color: -moz-dialogtext" class="colorBox">-moz-dialogtext</div>
+          </div>
+          <div id="eColorID__moz_dragtargetzone">
+            <div style="background-color: -moz-dragtargetzone" class="colorBox">-moz-dragtargetzone</div>
+          </div>
+          <div id="eColorID__moz_cellhighlight">
+            <div style="background-color: -moz-cellhighlight" class="colorBox">-moz-cellhighlight</div>
+          </div>
+          <div id="eColorID__moz_cellhighlighttext">
+            <div style="background-color: -moz-cellhighlighttext" class="colorBox">-moz-cellhighlighttext</div>
+          </div>
+          <div id="eColorID__moz_html_cellhighlight">
+            <div style="background-color: -moz-html-cellhighlight" class="colorBox">-moz-html-cellhighlight</div>
+          </div>
+          <div id="eColorID__moz_html_cellhighlighttext">
+            <div style="background-color: -moz-html-cellhighlighttext" class="colorBox">-moz-html-cellhighlighttext</div>
+          </div>
+          <div id="eColorID__moz_buttonhoverface">
+            <div style="background-color: -moz-buttonhoverface" class="colorBox">-moz-buttonhoverface</div>
+          </div>
+          <div id="eColorID__moz_buttonhovertext">
+            <div style="background-color: -moz-buttonhovertext" class="colorBox">-moz-buttonhovertext</div>
+          </div>
+          <div id="eColorID__moz_menuhover">
+            <div style="background-color: -moz-menuhover" class="colorBox">-moz-menuhover</div>
+          </div>
+          <div id="eColorID__moz_menuhovertext">
+            <div style="background-color: -moz-menuhovertext" class="colorBox">-moz-menuhovertext</div>
+          </div>
+          <div id="eColorID__moz_menubartext">
+            <div style="background-color: -moz-menubartext" class="colorBox">-moz-menubartext</div>
+          </div>
+          <div id="eColorID__moz_menubarhovertext">
+            <div style="background-color: -moz-menubarhovertext" class="colorBox">-moz-menubarhovertext</div>
+          </div>
+          <div id="eColorID__moz_oddtreerow">
+            <div style="background-color: -moz-oddtreerow" class="colorBox">-moz-oddtreerow</div>
+          </div>
+          <div id="eColorID__moz_mac_chrome_active">
+            <div style="background-color: -moz-mac-chrome-active" class="colorBox">-moz-mac-chrome-active</div>
+          </div>
+          <div id="eColorID__moz_mac_chrome_inactive">
+            <div style="background-color: -moz-mac-chrome-inactive" class="colorBox">-moz-mac-chrome-inactive</div>
+          </div>
+          <div id="eColorID__moz_mac_focusring">
+            <div style="background-color: -moz-mac-focusring" class="colorBox">-moz-mac-focusring</div>
+          </div>
+          <div id="eColorID__moz_mac_menuselect">
+            <div style="background-color: -moz-mac-menuselect" class="colorBox">-moz-mac-menuselect</div>
+          </div>
+          <div id="eColorID__moz_mac_menushadow">
+            <div style="background-color: -moz-mac-menushadow" class="colorBox">-moz-mac-menushadow</div>
+          </div>
+          <div id="eColorID__moz_mac_menutextdisable">
+            <div style="background-color: -moz-mac-menutextdisable" class="colorBox">-moz-mac-menutextdisable</div>
+          </div>
+          <div id="eColorID__moz_mac_menutextselect">
+            <div style="background-color: -moz-mac-menutextselect" class="colorBox">-moz-mac-menutextselect</div>
+          </div>
+          <div id="eColorID__moz_mac_disabledtoolbartext">
+            <div style="background-color: -moz-mac-disabledtoolbartext" class="colorBox">-moz-mac-disabledtoolbartext</div>
+          </div>
+          <div id="eColorID__moz_mac_secondaryhighlight">
+            <div style="background-color: -moz-mac-secondaryhighlight" class="colorBox">-moz-mac-secondaryhighlight</div>
+          </div>
+          <div id="eColorID__moz_win_mediatext">
+            <div style="background-color: -moz-win-mediatext" class="colorBox">-moz-win-mediatext</div>
+          </div>
+          <div id="eColorID__moz_win_communicationstext">
+            <div style="background-color: -moz-win-communicationstext" class="colorBox">-moz-win-communicationstext</div>
+          </div>
+          <div id="eColorID__moz_nativehyperlinktext">
+            <div style="background-color: -moz-nativehyperlinktext" class="colorBox">-moz-nativehyperlinktext</div>
+          </div>
+          <div id="eColorID__moz_comboboxtext">
+            <div style="background-color: -moz-comboboxtext" class="colorBox">-moz-comboboxtext</div>
+          </div>
+          <div id="eColorID__moz_combobox">
+            <div style="background-color: -moz-combobox" class="colorBox">-moz-combobox</div>
+          </div>
+        </div>
+        <script type="text/javascript;version=1.8">
+          let nodeList = document.querySelectorAll(".container > div > .colorBox");
+          nodeList.forEach(function (node) {
+            let bgColor = window.getComputedStyle(node).backgroundColor;
+            let isRGBA = bgColor.indexOf("rgba") === 0;
+            if (isRGBA) {
+              node.textContent += "*";
+            }
+          });
+        </script>
       </div>
     </div>
     <div class="spacer"/>
