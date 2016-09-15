@@ -90,19 +90,6 @@
   outline-offset: -1px;
 }
 
-@notKeyfocus@ @itemFinished@[exists]:hover {
-  background-color: hsla(210,4%,10%,.08);
-  outline: 1px solid hsla(210,4%,10%,.1);
-  outline-offset: -1px;
-  cursor: pointer;
-}
-
-@notKeyfocus@ @itemFinished@[exists]:hover:active {
-  background-color: hsla(210,4%,10%,.15);
-  outline: 1px solid hsla(210,4%,10%,.15);
-  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
-}
-
 @item@[showingsubview] {
   background-color: Highlight;
   color: HighlightText;
@@ -110,41 +97,15 @@
               color var(--panelui-subview-transition-duration);
 }
 
-@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
-@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover:active,
+@notKeyfocus@ @item@[verdict="Malware"] {
+  color: hsl(4, 82%, 47%);
+}
+
+@notKeyfocus@ @item@[verdict="Malware"]:hover,
+@notKeyfocus@ @item@[verdict="Malware"]:hover:active,
 @item@[showingsubview][verdict="Malware"] {
   background-color: hsl(4, 82%, 47%);
   color: white;
-}
-
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-  @notKeyfocus@ @itemFinished@[exists]:hover {
-    border-radius: 3px;
-    outline: 0;
-    border-top: 1px solid hsla(0,0%,100%,.2);
-    border-bottom: 1px solid hsla(0,0%,0%,.2);
-    background-color: Highlight;
-    color: HighlightText;
-  }
-
-  @notKeyfocus@ @itemFinished@[exists]:hover:active {
-    background-color: Highlight;
-    outline: 0;
-    box-shadow: none;
-  }
-}
-
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
-       (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
-  @notKeyfocus@ @itemFinished@[exists]:hover {
-    border: 1px solid hsl(213,45%,65%);
-    box-shadow: 0 0 0 1px hsla(0,0%,100%,.5) inset,
-                0 1px 0 hsla(0,0%,100%,.3) inset;
-    background-image: linear-gradient(hsl(212,86%,92%), hsl(212,91%,86%));
-    color: black;
-  }
 }
 
 /*** Button icons ***/

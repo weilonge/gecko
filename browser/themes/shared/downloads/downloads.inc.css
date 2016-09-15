@@ -25,7 +25,7 @@
 
 #downloadsListBox {
   background: transparent;
-  padding: 4px;
+  padding: 0;
   color: inherit;
   -moz-appearance: none;
   margin: 0;
@@ -45,12 +45,21 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.downloadsPanelFooter toolbarseparator {
+.downloadsPanelFooter toolbarseparator,
+richlistitem[type="download"] toolbarseparator {
   margin: 0;
   border: 0;
   min-width: 0;
   border-left: 1px solid var(--panel-separator-color);
   -moz-appearance: none;
+}
+
+richlistitem[type="download"]:hover {
+  background-color: #ebebeb;
+}
+
+richlistitem[type="download"]:hover toolbarseparator {
+  height: var(--downloads-item-height);
 }
 
 .downloadsPanelFooterButton {
@@ -168,18 +177,20 @@ richlistitem[type="download"] {
 
 richlistitem[type="download"] {
   margin: 0;
-  border-top: 1px solid var(--downloads-item-border-top-color);
   border-bottom: 1px solid var(--downloads-item-border-bottom-color);
   background: transparent;
-  padding: 8px;
-}
-
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
+  padding: 0;
 }
 
 richlistitem[type="download"]:last-child {
-  border-bottom: 1px solid transparent;
+  border-bottom: none;
+}
+
+richlistitem[type="download"] > .item-info-box {
+  height: var(--downloads-item-height);
+  padding-inline-end: 0;
+  padding: 8px;
+  -moz-box-align: center;
 }
 
 .downloadTypeIcon {
@@ -193,7 +204,8 @@ richlistitem[type="download"]:last-child {
 
 .downloadBlockedBadge {
   margin: 0 4px;
-  background: url("chrome://browser/skin/downloads/download-blocked.svg") top right / 16px no-repeat;
+  background: url("chrome://browser/skin/downloads/download-blocked.svg") bottom 4px right 6px / 16px no-repeat;
+  filter: drop-shadow(1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .downloadBlockedBadge:-moz-locale-dir(rtl) {
@@ -206,6 +218,10 @@ richlistitem[type="download"]:last-child {
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {
   background-image: url("chrome://browser/skin/info.svg");
+}
+
+@item@[verdict="Malware"] {
+  color: hsl(4, 82%, 47%);
 }
 
 /* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
@@ -244,21 +260,39 @@ richlistitem[type="download"]:last-child {
   cursor: inherit;
 }
 
+richlistitem[type="download"] toolbarseparator {
+  min-height: 50px;
+}
+
+richlistitem[type="download"][state="8"] toolbarseparator {
+  display: none;
+}
+
 .downloadButton {
   -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
+  min-width: 58px;
+  height: var(--downloads-item-height);
+  margin: 0;
   border: none;
   background: transparent;
-  padding: 5px;
+  padding: 8px;
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
 }
 
-.downloadButton > .button-box {
-  padding: 0;
+richlistitem[type="download"] .downloadButton:hover,
+richlistitem[type="download"][state="1"] .item-info-box:hover {
+  background-color: hsla(0, 0%, 0%, .05);
 }
 
+richlistitem[type="download"] .downloadButton:hover:active,
+richlistitem[type="download"][state="1"] .item-info-box:hover:active {
+  background-color: hsla(0, 0%, 0%, .1);
+}
+
+richlistitem[type="download"][state="8"] .downloadButton:hover,
+richlistitem[type="download"][state="8"] .downloadButton:hover:active {
+  background-color: transparent;
+}
 
 /*** Blocked subview ***/
 
