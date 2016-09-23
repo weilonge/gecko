@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Directory metadata
-component_engine = ('Core', 'JavaScript Engine')
+component_engine =  ('Core', 'JavaScript Engine')
 component_gc     = ('Core', 'JavaScript: GC')
 component_intl   = ('Core', 'JavaScript: Internationalization API')
 component_jit    = ('Core', 'JavaScript Engine: JIT')

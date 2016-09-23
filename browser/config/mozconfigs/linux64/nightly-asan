@@ -1,4 +1,5 @@
 # We still need to build with debug symbols
+ac_add_options --enable-official-branding
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-O2 -gline-tables-only"
 
