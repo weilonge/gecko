@@ -172,3 +172,13 @@ toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input 
 toolbarpaletteitem > toolbaritem > * > textbox > hbox > hbox > html|*.textbox-input {
   visibility: hidden;
 }
+
+/* ::::: contextual feedback ::::: */
+
+.ac-contextual-feedback-area {
+  background-color: #F6F6F6;
+}
+
+.ac-contextual-feedback-area > image {
+  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon);
+}

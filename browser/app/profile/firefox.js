@@ -1229,6 +1229,12 @@ pref("security.insecure_password.ui.enabled", true);
 pref("security.insecure_password.ui.enabled", false);
 #endif
 
+#ifdef EARLY_BETA_OR_EARLIER
+pref("security.contextualFeedback.enabled", false);
+#else
+pref("security.contextualFeedback.enabled", true);
+#endif
+
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 

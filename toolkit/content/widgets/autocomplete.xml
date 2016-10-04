@@ -3,6 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+ <!DOCTYPE bindings [
+ <!ENTITY % autoCompleteDTD SYSTEM "chrome://global/locale/autocomplete.dtd" >
+ %autoCompleteDTD;
+ ]>
+
 <bindings id="autocompleteBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
@@ -750,7 +755,6 @@
         </setter>
       </property>
 
-
       <method name="addColumn">
         <parameter name="aAttrs"/>
         <body>
@@ -1067,6 +1071,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     </resources>
 
     <content ignorekeys="true" level="top" consumeoutsideclicks="never">
+      <xul:hbox id="contextual-feedback-area" class="ac-contextual-feedback-area">
+        <xul:image/>
+        <xul:vbox>
+          <xul:description value="&autocomplete.contextualFeedback.description;"/>
+          <xul:label class="text-link" href="https://support.mozilla.org/en-US/kb/insecure-password-warning-firefox?as=u&amp;utm_source=inproduct" value="&autocomplete.contextualFeedback.learnMore;"/>
+        </xul:vbox>
+      </xul:hbox>
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
       <xul:hbox>
         <children/>
@@ -1076,6 +1087,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
       <field name="_rlbAnimated">false</field>
+      <field name="_showContextualFeedback">false</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -1090,6 +1102,22 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this.richlistbox.ensureElementIsVisible(
             this.richlistbox.selectedItem || this.richlistbox.firstChild);
 
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="showContextualFeedback"
+                   onget="return this._showContextualFeedback;">
+        <setter>
+          <![CDATA[
+          let contextualFeedbackArea = document.getElementById("contextual-feedback-area");
+          if (val) {
+            contextualFeedbackArea.classList.remove("ac-contextual-feedback-hide");
+          } else {
+            contextualFeedbackArea.classList.add("ac-contextual-feedback-hide");
+          }
+          this._showContextualFeedback = val;
           return val;
         ]]>
         </setter>

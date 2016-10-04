@@ -1517,9 +1517,10 @@ let AutoCompletePopup = {
     let window = element.ownerDocument.defaultView;
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
+    let isHttp = element.ownerGlobal.location.protocol === "http:";
 
     sendAsyncMessage("FormAutoComplete:MaybeOpenPopup",
-                     { results, rect, dir });
+                     { results, rect, dir, isHttp });
     this._input = input;
   },
 

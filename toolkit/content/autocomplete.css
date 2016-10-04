@@ -38,3 +38,7 @@ richlistitem {
 .ac-separator[type=keyword] {
   display: none;
 }
+
+.ac-contextual-feedback-hide {
+  display: none;
+}

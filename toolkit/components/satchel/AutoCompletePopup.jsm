@@ -12,6 +12,9 @@ this.EXPORTED_SYMBOLS = [ "AutoCompletePopup" ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+
+const PREF_CONTEXTUAL_FEEDBACK_ENABLED = "security.contextualFeedback.enabled";
 
 // AutoCompleteResultView is an abstraction around a list of results
 // we got back up from browser-content.js. It implements enough of
@@ -98,15 +101,27 @@ this.AutoCompletePopup = {
   ],
 
   init: function() {
+    Preferences.observe(PREF_CONTEXTUAL_FEEDBACK_ENABLED, this._observePref, this);
+
+    this.contextualFeedbackEnabled =
+      Preferences.get(PREF_CONTEXTUAL_FEEDBACK_ENABLED, false);
+
     for (let msg of this.MESSAGES) {
       Services.mm.addMessageListener(msg, this);
     }
   },
 
   uninit: function() {
+    Preferences.ignore(PREF_CONTEXTUAL_FEEDBACK_ENABLED, this._observePref, this);
+
     for (let msg of this.MESSAGES) {
       Services.mm.removeMessageListener(msg, this);
     }
+  },
+
+  _observePref: function() {
+    this.contextualFeedbackEnabled =
+      Preferences.get(PREF_CONTEXTUAL_FEEDBACK_ENABLED, false);
   },
 
   handleEvent: function(evt) {
@@ -136,7 +151,7 @@ this.AutoCompletePopup = {
   // this function is also called directly by the login manager, which
   // uses a single message to fill in the autocomplete results. See
   // "RemoteLogins:autoCompleteLogins".
-  showPopupWithResults: function({ browser, rect, dir, results }) {
+  showPopupWithResults: function({ browser, rect, dir, results, isHttp }) {
     if (!results.length || this.openedPopup) {
       // We shouldn't ever be showing an empty popup, and if we
       // already have a popup open, the old one needs to close before
@@ -171,6 +186,8 @@ this.AutoCompletePopup = {
       this.openedPopup.showImageColumn = false;
       this.openedPopup.addEventListener("popuphidden", this);
       this.openedPopup.addEventListener("popupshowing", this);
+      this.openedPopup.showContextualFeedback =
+        this.contextualFeedbackEnabled && isHttp;
       this.openedPopup.openPopupAtScreenRect("after_start", rect.left, rect.top,
                                              rect.width, rect.height, false,
                                              false);
@@ -239,9 +256,9 @@ this.AutoCompletePopup = {
       }
 
       case "FormAutoComplete:MaybeOpenPopup": {
-        let { results, rect, dir } = message.data;
+        let { results, rect, dir, isHttp } = message.data;
         this.showPopupWithResults({ browser: message.target, rect, dir,
-                                    results });
+                                    results, isHttp });
         break;
       }
 
