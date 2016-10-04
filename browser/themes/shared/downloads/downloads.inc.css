@@ -25,7 +25,7 @@
 
 #downloadsListBox {
   background: transparent;
-  padding: 4px;
+  padding: 0;
   color: inherit;
   -moz-appearance: none;
   margin: 0;
@@ -45,7 +45,8 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.downloadsPanelFooter toolbarseparator {
+.downloadsPanelFooter toolbarseparator,
+@item@ toolbarseparator {
   margin: 0;
   border: 0;
   min-width: 0;
@@ -108,6 +109,11 @@ toolbarseparator.downloadsDropmarkerSplitter {
   margin: 7px 0;
 }
 
+@item@ > toolbarseparator {
+  margin: 10px 0;
+}
+
+@item@:hover > toolbarseparator,
 #downloadsFooter:hover toolbarseparator.downloadsDropmarkerSplitter,
 #downloadsFooter[showingdropdown] toolbarseparator {
   margin: 0;
@@ -168,18 +174,19 @@ richlistitem[type="download"] {
 
 richlistitem[type="download"] {
   margin: 0;
-  border-top: 1px solid var(--downloads-item-border-top-color);
   border-bottom: 1px solid var(--downloads-item-border-bottom-color);
   background: transparent;
-  padding: 8px;
-}
-
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
+  padding: 0;
 }
 
 richlistitem[type="download"]:last-child {
-  border-bottom: 1px solid transparent;
+  border-bottom: none;
+}
+
+richlistitem[type="download"] > .downloadMainArea {
+  height: var(--downloads-item-height);
+  padding-inline-end: 0;
+  padding: 8px;
 }
 
 .downloadTypeIcon {
@@ -206,6 +213,10 @@ richlistitem[type="download"]:last-child {
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {
   background-image: url("chrome://browser/skin/info.svg");
+}
+
+@item@[verdict="Malware"] {
+  color: #aa1b08;
 }
 
 /* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
@@ -244,21 +255,50 @@ richlistitem[type="download"]:last-child {
   cursor: inherit;
 }
 
+@item@[state="8"] toolbarseparator {
+  visibility: hidden;
+}
+
 .downloadButton {
   -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
+  min-width: 58px;
+  height: var(--downloads-item-height);
+  margin: 0;
   border: none;
   background: transparent;
-  padding: 5px;
+  padding: 8px;
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
 }
 
-.downloadButton > .button-box {
-  padding: 0;
+@itemFinished@[exists]:hover .downloadMainArea,
+@item@:hover .downloadButton,
+@item@[verdict]:hover {
+  background-color: var(--arrowpanel-dimmed);
 }
 
+@item@ .downloadButton:hover,
+@itemFinished@[exists] .downloadMainArea:hover {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+@item@ .downloadButton:hover:active,
+@itemFinished@[exists] .downloadMainArea:hover:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+@item@[verdict] .downloadButton,
+@item@[verdict] .downloadButton:hover,
+@item@[verdict] .downloadButton:hover:active {
+  background-color: transparent;
+}
+
+@keyfocus@ @itemFocused@[verdict="Malware"],
+@notKeyfocus@ @item@[verdict="Malware"]:hover,
+@notKeyfocus@ @item@[verdict="Malware"]:hover:active,
+@item@[showingsubview][verdict="Malware"] {
+  background-color: #aa1b08;
+  color: white;
+}
 
 /*** Blocked subview ***/
 
