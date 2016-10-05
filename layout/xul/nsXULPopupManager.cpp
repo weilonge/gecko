@@ -137,7 +137,7 @@ nsXULPopupManager::nsXULPopupManager() :
                                kPrefDevtoolsDisableAutoHide, false);
 }
 
-nsXULPopupManager::~nsXULPopupManager() 
+nsXULPopupManager::~nsXULPopupManager()
 {
   NS_ASSERTION(!mPopups && !mNoHidePanels, "XUL popups still open");
 }
@@ -622,7 +622,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
             return;
           nsIFrame* rootDocumentRootFrame = rootDocPresContext->
               PresShell()->FrameManager()->GetRootFrame();
-          if ((event->mClass == eMouseEventClass || 
+          if ((event->mClass == eMouseEventClass ||
                event->mClass == eMouseScrollEventClass ||
                event->mClass == eWheelEventClass) &&
                !event->AsGUIEvent()->mWidget) {
@@ -1021,7 +1021,7 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
         item = item->GetChild();
       }
     }
-    
+
     deselectMenu = aDeselectMenu;
     popupToHide = topMenu->Content();
     popupFrame = topMenu->Frame();
@@ -2035,7 +2035,7 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 
 // Notify
 //
-// The item selection timer has fired, we might have to readjust the 
+// The item selection timer has fired, we might have to readjust the
 // selected item. There are two cases here that we are trying to deal with:
 //   (1) diagonal movement from a parent menu to a submenu passing briefly over
 //       other items, and
@@ -2047,7 +2047,7 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 // case (1):
 //  As the mouse moves from the parent item of a submenu (we'll call 'A') diagonally into the
 //  submenu, it probably passes through one or more sibilings (B). As the mouse passes
-//  through B, it becomes the current menu item and the timer is set and mTimerMenu is 
+//  through B, it becomes the current menu item and the timer is set and mTimerMenu is
 //  set to A. Before the timer fires, the mouse leaves the menu containing A and B and
 //  enters the submenus. Now when the timer fires, |mPopups| is null (!= |mTimerMenu|)
 //  so we have to see if anything in A's children is selected (recall that even disabled
@@ -2066,10 +2066,10 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 //  and is discussed in bugzilla bug 29400. Case (1) asks if A's submenu has a selected
 //  child, and if it does, set the selected item to A. Because B has a submenu open, it
 //  is selected and as a result, A is set to be the selected item even though the mouse
-//  rests in C -- very wrong. 
+//  rests in C -- very wrong.
 //
-//  The solution is to use the same idea, but instead of only checking one level, 
-//  drill all the way down to the deepest open submenu and check if it has something 
+//  The solution is to use the same idea, but instead of only checking one level,
+//  drill all the way down to the deepest open submenu and check if it has something
 //  selected. Since the mouse is in a grandparent, it won't, and we know that we can
 //  safely close up A and all its children.
 //
@@ -2204,10 +2204,10 @@ nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode)
   // no popup handled the key, so check the active menubar, if any
   if (mActiveMenuBar) {
     nsMenuFrame* currentMenu = mActiveMenuBar->GetCurrentMenuItem();
-  
+
     if (NS_DIRECTION_IS_INLINE(theDirection)) {
       nsMenuFrame* nextItem = (theDirection == eNavigationDirection_End) ?
-                              GetNextMenuItem(mActiveMenuBar, currentMenu, false) : 
+                              GetNextMenuItem(mActiveMenuBar, currentMenu, false) :
                               GetPreviousMenuItem(mActiveMenuBar, currentMenu, false);
       mActiveMenuBar->ChangeMenuItem(nextItem, true, true);
       return true;
@@ -2662,7 +2662,7 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
         }
 
         // Clear the item to avoid bugs as it may have been deleted during rollup.
-        item = nullptr; 
+        item = nullptr;
       }
       aKeyEvent->AsEvent()->StopPropagation();
       aKeyEvent->AsEvent()->PreventDefault();
