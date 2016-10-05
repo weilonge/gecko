@@ -91,6 +91,7 @@ PopupBoxObject::OpenPopup(Element* aAnchorElement,
                           bool aAttributesOverride,
                           Event* aTriggerEvent)
 {
+  printf("[%lu] PopupBoxObject::OpenPopup\n", (unsigned long)time(NULL) * 1000);
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mContent) {
     nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));

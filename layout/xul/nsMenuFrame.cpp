@@ -375,6 +375,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
                          WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus)
 {
+  printf("[%lu] nsMenuFrame::HandleEvent %d\n", (unsigned long)time(NULL) * 1000, aEvent->mMessage);
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;

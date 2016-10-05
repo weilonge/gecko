@@ -759,6 +759,7 @@ nsXULPopupManager::ShowPopup(nsIContent* aPopup,
                              bool aSelectFirstItem,
                              nsIDOMEvent* aTriggerEvent)
 {
+  printf("[%lu] nsXULPopupManager::ShowPopup\n", (unsigned long)time(NULL) * 1000);
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
     return;
@@ -894,6 +895,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
                                      bool aIsContextMenu,
                                      bool aSelectFirstItem)
 {
+  printf("[%lu] nsXULPopupManager::ShowPopupCallback\n", (unsigned long)time(NULL) * 1000);
   nsPopupType popupType = aPopupFrame->PopupType();
   bool ismenu = (popupType == ePopupTypeMenu);
 
@@ -1419,6 +1421,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                          bool aIsContextMenu,
                                          bool aSelectFirstItem)
 {
+  printf("[%lu] nsXULPopupManager::FirePopupShowingEvent\n", (unsigned long)time(NULL) * 1000);
   nsCOMPtr<nsIContent> popup = aPopup; // keep a strong reference to the popup
 
   nsMenuPopupFrame* popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
@@ -1770,6 +1773,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
 
   // if the popup was just rolled up, don't reopen it
   nsCOMPtr<nsIWidget> widget = aPopup->GetWidget();
+  printf("[%lu] nsXULPopupManager::MayShowPopup widget->GetLastRollup() %lu\n", (unsigned long)time(NULL) * 1000, widget->GetLastRollup());
   if (widget && widget->GetLastRollup() == aPopup->GetContent())
       return false;
 
@@ -2708,6 +2712,7 @@ nsXULPopupManager::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 NS_IMETHODIMP
 nsXULPopupShowingEvent::Run()
 {
+  printf("[%lu] nsXULPopupShowingEvent::Run\n", (unsigned long)time(NULL) * 1000);
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
     pm->FirePopupShowingEvent(mPopup, mIsContextMenu, mSelectFirstItem);

@@ -870,6 +870,7 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
 void
 nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
 {
+  printf("[%lu] nsMenuPopupFrame::ShowPopup\n", (unsigned long)time(NULL) * 1000);
   mIsContextMenu = aIsContextMenu;
 
   InvalidateFrameSubtree();

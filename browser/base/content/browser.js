@@ -7333,12 +7333,16 @@ var gIdentityHandler = {
   },
 
   onPopupShown(event) {
+    console.log('[' + new Date().getTime() + ']' + "browser.js onPopupShown");
+    console.log(event);
     if (event.target == this._identityPopup) {
       window.addEventListener("focus", this, true);
     }
   },
 
   onPopupHidden(event) {
+    console.log('[' + new Date().getTime() + ']' + "browser.js onPopupHidden");
+    console.log(event);
     if (event.target == this._identityPopup) {
       window.removeEventListener("focus", this, true);
       this._identityBox.removeAttribute("open");

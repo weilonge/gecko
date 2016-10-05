@@ -159,11 +159,15 @@
                 <toolbarseparator id="downloadsFooterButtonsSplitter"
                         class="downloadsDropmarkerSplitter"/>
                 <button id="downloadsFooterDropmarker"
+                        onpopupshowing="dump('[' + new Date().getTime() + '][JS] ' + 'button popupshowing\n');"
+                        onpopupshown="dump('[' + new Date().getTime() + '][JS] ' + 'button popupshown\n');"
+                        onpopuphidden="dump('[' + new Date().getTime() + '][JS] ' + 'button popuphidden\n');"
                         class="downloadsPanelFooterButton downloadsDropmarker"
                         type="menu">
                   <menupopup id="downloadSubPanel"
-                             onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);"
-                             onpopuphidden="DownloadsPanel.onFooterPopupHidden(event);"
+                             onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);dump('[' + new Date().getTime() + '][JS] ' + 'menupopup popupshowing\n');"
+                             onpopupshown="dump('[' + new Date().getTime() + '][JS] ' + 'menupopup popupshown\n');"
+                             onpopuphidden="DownloadsPanel.onFooterPopupHidden(event);dump('[' + new Date().getTime() + '][JS] ' + 'menupopup popuphidden\n');"
                              position="after_end">
                     <menuitem id="downloadsDropdownItemClearList"
                               command="downloadsCmd_clearList"
