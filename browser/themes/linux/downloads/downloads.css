@@ -33,13 +33,6 @@
   outline-offset: -1px;
 }
 
-@item@[showingsubview] {
-  background-color: Highlight;
-  background-image: linear-gradient(hsla(0,0%,100%,.1), transparent);
-  color: HighlightText;
-  cursor: pointer;
-}
-
 /*** Button icons ***/
 
 .downloadButton.downloadIconCancel {

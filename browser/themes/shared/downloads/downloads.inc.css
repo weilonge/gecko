@@ -184,7 +184,6 @@ richlistitem[type="download"]:last-child {
 }
 
 richlistitem[type="download"] > .downloadMainArea {
-  padding-inline-end: 0;
   padding: 8px;
 }
 
@@ -212,10 +211,6 @@ richlistitem[type="download"] > .downloadMainArea {
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {
   background-image: url("chrome://browser/skin/info.svg");
-}
-
-@item@[verdict="Malware"] {
-  color: #aa1b08;
 }
 
 /* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
@@ -254,14 +249,13 @@ richlistitem[type="download"] > .downloadMainArea {
   cursor: inherit;
 }
 
-@item@[state="8"] > toolbarseparator {
+@item@[verdict] > toolbarseparator {
   visibility: hidden;
 }
 
 .downloadButton {
   -moz-appearance: none;
   min-width: 58px;
-  height: var(--downloads-item-height);
   margin: 0;
   border: none;
   background: transparent;
@@ -269,31 +263,33 @@ richlistitem[type="download"] > .downloadMainArea {
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
 }
 
-@itemFinished@[exists]:hover .downloadMainArea,
-@item@:hover .downloadButton,
-@item@[verdict]:hover {
+@itemFinished@[exists]:hover > .downloadMainArea,
+@item@:not([verdict]):hover > .downloadButtonArea {
   background-color: var(--arrowpanel-dimmed);
 }
 
-@item@ .downloadButton:hover,
-@itemFinished@[exists] .downloadMainArea:hover {
+@itemFinished@[exists] .downloadMainArea:hover,
+@item@:not([verdict]) > .downloadButtonArea:hover,
+@item@[verdict]:hover {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-@item@ .downloadButton:hover:active,
-@itemFinished@[exists] .downloadMainArea:hover:active {
+@itemFinished@[exists] > .downloadMainArea:hover:active,
+@item@:not([verdict]) > .downloadButtonArea:hover:active,
+@item@[verdict]:hover:active {
   background-color: var(--arrowpanel-dimmed-even-further);
 }
 
-@item@[verdict] .downloadButton,
-@item@[verdict] .downloadButton:hover,
-@item@[verdict] .downloadButton:hover:active {
-  background-color: transparent;
+@item@[showingsubview] {
+  background-color: Highlight;
+  color: HighlightText;
+  transition: background-color var(--panelui-subview-transition-duration),
+              color var(--panelui-subview-transition-duration);
 }
 
-@notKeyfocus@ @item@[verdict="Malware"]:hover,
-@notKeyfocus@ @item@[verdict="Malware"]:hover:active,
-@item@[showingsubview][verdict="Malware"] {
+@item@[verdict="Malware"]:hover,
+@item@[verdict="Malware"]:hover:active,
+@item@[verdict="Malware"][showingsubview] {
   background-color: #aa1b08;
   color: white;
 }

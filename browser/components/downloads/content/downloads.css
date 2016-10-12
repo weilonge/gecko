@@ -114,12 +114,7 @@ richlistitem.download button {
                               [state="5"]) /* Starting (queued)  */)
                                            .downloadShowMenuItem,
 
-.download-state[state="7"]                 .downloadCommandsSeparator,
-
-.download-state:-moz-any(    [state="6"], /* Blocked (parental) */
-                             [state="7"], /* Scanning           */
-                             [state="9"]) /* Blocked (policy)   */
-                                          toolbarseparator
+.download-state[state="7"]                 .downloadCommandsSeparator
 {
   display: none;
 }
@@ -165,6 +160,11 @@ richlistitem.download button {
 
 .download-state:not(          [state="1"]  /* Finished           */)
                                            .downloadShow,
+
+.download-state:-moz-any(     [state="6"], /* Blocked (parental) */
+                              [state="7"], /* Scanning           */
+                              [state="9"]) /* Blocked (policy)   */
+                                           > toolbarseparator,
 
 /* The "show blocked info" button is shown only in the downloads panel. */
 .downloadShowBlockedInfo

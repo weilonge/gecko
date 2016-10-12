@@ -31,12 +31,11 @@
   outline-offset: -2px;
 }
 
-/*** Highlighted list items ***/
-
-@item@[showingsubview] {
-  background-color: Highlight;
-  color: HighlightText;
+@item@[verdict="Malware"] {
+  color: #aa1b08;
 }
+
+/*** Highlighted list items ***/
 
 @keyfocus@ @itemFocused@ {
   outline: 2px -moz-mac-focusring solid;

@@ -73,18 +73,17 @@
   border: 1px dotted ThreeDDarkShadow;
 }
 
+@media (-moz-windows-default-theme) {
+  @item@[verdict="Malware"] {
+    color: #aa1b08;
+  }
+}
+
 /*** Highlighted list items ***/
 
 @keyfocus@ @itemFocused@ {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
-}
-
-@item@[showingsubview] {
-  background-color: Highlight;
-  color: HighlightText;
-  transition: background-color var(--panelui-subview-transition-duration),
-              color var(--panelui-subview-transition-duration);
 }
 
 /*** Button icons ***/
