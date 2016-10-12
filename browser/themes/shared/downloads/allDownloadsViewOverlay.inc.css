@@ -89,13 +89,14 @@
   margin: 3px;
   border: none;
   padding: 5px;
-  color: graytext;
+  color: inherit;
 }
 
 .downloadButton > .button-box {
   -moz-appearance: none;
   padding: 2px !important;
   border-radius: 50%;
+  color: graytext;
 }
 
 .downloadButton > .button-box > .button-icon {
@@ -110,38 +111,36 @@
   display: none;
 }
 
-@item@ .downloadButton:hover > .button-box {
+.downloadButton:hover > .button-box {
   background-color: graytext;
+  color: -moz-field;
 }
 
-@item@:hover .downloadButton:hover {
-  color: HighlightText;
+.downloadButton:hover:active > .button-box {
+  background-color: -moz-fieldtext;
 }
 
-@itemFocused@ .downloadButton:hover > .button-box {
+@itemFocused@ > .downloadButtonArea > .downloadButton > .button-box {
+  color: inherit;
+}
+
+@itemFocused@ > .downloadButtonArea > .downloadButton:hover > .button-box {
   background-color: HighlightText;
-}
-
-@itemFocused@ .downloadButton:hover:active > .button-box {
-  background-color: graytext;
-}
-
-@itemFocused@ .downloadButton,
-@itemFocused@:hover .downloadButton {
-  color: HighlightText;
-}
-
-@itemFocused@:hover .downloadButton:hover {
   color: Highlight;
+}
+
+@itemFocused@ > .downloadButtonArea > .downloadButton:hover:active > .button-box {
+  background-color: -moz-field;
+  color: -moz-fieldtext;
 }
 
 /*** Button icons ***/
 
-.downloadButton.downloadIconCancel .button-icon {
+.downloadIconCancel > .button-box > .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#cancel");
 }
 
-.downloadButton.downloadIconShow .button-icon {
+.downloadIconShow > .button-box > .button-icon {
 %ifdef XP_MACOSX
   list-style-image: url("chrome://browser/skin/panel-icons.svg#magnifier");
 %else
@@ -149,6 +148,6 @@
 %endif
 }
 
-.downloadButton.downloadIconRetry .button-icon {
+.downloadIconRetry > .button-box > .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
 }
