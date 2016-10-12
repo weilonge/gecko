@@ -114,8 +114,12 @@ richlistitem.download button {
                               [state="5"]) /* Starting (queued)  */)
                                            .downloadShowMenuItem,
 
-.download-state[state="7"]                 .downloadCommandsSeparator
+.download-state[state="7"]                 .downloadCommandsSeparator,
 
+.download-state:-moz-any(    [state="6"], /* Blocked (parental) */
+                             [state="7"], /* Scanning           */
+                             [state="9"]) /* Blocked (policy)   */
+                                          toolbarseparator
 {
   display: none;
 }
