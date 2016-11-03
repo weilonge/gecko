@@ -239,9 +239,12 @@ function listenForUnexpectedPopupShown() {
  * @return {Promise} with the results
  */
 function promiseACShown() {
+  ok(true, "promiseACShown" + 1);
   gPopupShownExpected = true;
   return new Promise(resolve => {
+    ok(true, "promiseACShown" + 2);
     gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
+      ok(true, "promiseACShown" + 3);
       gPopupShownExpected = false;
       resolve(results);
     });

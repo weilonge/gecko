@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
-const PREF_INSECURE_FIELD_WARNING_ENABLED = "security.insecure_field_warning.contextual.enabled";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -18,6 +17,7 @@ Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/InsecurePasswordUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+const { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
@@ -313,6 +313,7 @@ var LoginManagerContent = {
                         previousResult: previousResult,
                         rect: aRect,
                         isSecure: InsecurePasswordUtils.isFormSecure(form),
+                        isPasswordField: aElement.type == "password",
                         remote: remote };
 
     return this._sendRequest(messageManager, requestData,
@@ -974,6 +975,8 @@ var LoginManagerContent = {
         return;
       }
 
+      this._formFillService.markAsLoginManagerField(passwordField);
+
       // If the password field is disabled or read-only, there's nothing to do.
       if (passwordField.disabled || passwordField.readOnly) {
         log("not filling form, password field disabled or read-only");
@@ -1027,8 +1030,9 @@ var LoginManagerContent = {
       // Attach autocomplete stuff to the username field, if we have
       // one. This is normally used to select from multiple accounts,
       // but even with one account we should refill if the user edits.
-      if (usernameField)
+      if (usernameField) {
         this._formFillService.markAsLoginManagerField(usernameField);
+      }
 
       // Don't clobber an existing password.
       if (passwordField.value && !clobberPassword) {
@@ -1217,34 +1221,25 @@ var LoginUtils = {
 };
 
 // nsIAutoCompleteResult implementation
-function UserAutoCompleteResult (aSearchString, matchingLogins, {isSecure, messageManager}) {
-  function loginSort(a, b) {
-    var userA = a.username.toLowerCase();
-    var userB = b.username.toLowerCase();
-
-    if (userA < userB)
-      return -1;
-
-    if (userA > userB)
-      return  1;
-
-    return 0;
-  }
-
-  let prefShowInsecureFieldWarning =
-    Preferences.get(PREF_INSECURE_FIELD_WARNING_ENABLED, false);
-
-  this._showInsecureFieldWarning = (!isSecure && prefShowInsecureFieldWarning) ? 1 : 0;
+function UserAutoCompleteResult (aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField}) {
   this.searchString = aSearchString;
-  this.logins = matchingLogins.sort(loginSort);
-  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning;
-  this._messageManager = messageManager;
-  this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
 
-  if (this.matchCount > 0) {
-    this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-    this.defaultIndex = 0;
-  }
+  this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
+  this._dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
+                              { day: "numeric", month: "short", year: "numeric" });
+
+  this._messageManager = messageManager;
+  this._matchingLogins = matchingLogins;
+  this._isPasswordField = isPasswordField;
+  this._isSecure = isSecure;
+
+  Services.prefs.addObserver("security.insecure_field_warning.contextual.enabled",
+                             this.updateWithPrefChange.bind(this), false);
+
+  Services.prefs.addObserver("signon.autofillForms.http",
+                             this.updateWithPrefChange.bind(this), false);
+
+  this.updateWithPrefChange("init");
 }
 
 UserAutoCompleteResult.prototype = {
@@ -1260,6 +1255,50 @@ UserAutoCompleteResult.prototype = {
     return this;
   },
 
+  updateWithPrefChange(note) {
+    console.log("updateWithPrefChange:", note);
+    function loginSort(a, b) {
+      var userA = a.username.toLowerCase();
+      var userB = b.username.toLowerCase();
+
+      if (userA < userB)
+        return -1;
+
+      if (userA > userB)
+        return  1;
+
+      return 0;
+    }
+
+    function findDuplicates(loginList) {
+      let seen = new Set();
+      let duplicates = new Set();
+      for (let login of loginList) {
+        if (seen.has(login.username)) {
+          duplicates.add(login.username);
+        }
+        seen.add(login.username);
+      }
+      return duplicates;
+    }
+
+    var prefInsecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
+    var prefShowInsecureFieldWarning = Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled");
+
+    let currentMatchingLogins = (!prefInsecureAutofill && !this._isSecure) ?
+                                [] : this._matchingLogins;
+
+    this._showInsecureFieldWarning = (!this._isSecure && prefShowInsecureFieldWarning) ? 1 : 0;
+    this.logins = currentMatchingLogins.sort(loginSort);
+    this.matchCount = currentMatchingLogins.length + this._showInsecureFieldWarning;
+    this._duplicateUsernames = findDuplicates(currentMatchingLogins);
+
+    if (this.matchCount > 0) {
+      this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+      this.defaultIndex = 0;
+    }
+  },
+
   // Interfaces from idl...
   searchString : null,
   searchResult : Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
@@ -1268,25 +1307,50 @@ UserAutoCompleteResult.prototype = {
   matchCount : 0,
 
   getValueAt(index) {
-    if (index < 0 || index >= this.matchCount)
+    if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
+    }
 
     if (this._showInsecureFieldWarning && index === 0) {
       return "";
     }
 
-    return this.logins[index - this._showInsecureFieldWarning].username;
+    let selectedLogin = this.logins[index - this._showInsecureFieldWarning];
+
+    return this._isPasswordField ? selectedLogin.password : selectedLogin.username;
   },
 
   getLabelAt(index) {
-    if (index < 0 || index >= this.matchCount)
+    if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
+    }
 
     if (this._showInsecureFieldWarning && index === 0) {
       return this._stringBundle.GetStringFromName("insecureFieldWarningDescription");
     }
 
-    return this.logins[index - this._showInsecureFieldWarning].username;
+    let that = this;
+
+    function getLocalizedString(key, formatArgs) {
+      if (formatArgs) {
+        return that._stringBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+      }
+      return that._stringBundle.GetStringFromName(key);
+    }
+
+    let login = this.logins[index - this._showInsecureFieldWarning];
+    let username = login.username;
+    // If login is empty or duplicated we want to append a modification date to it.
+    if (!username || this._duplicateUsernames.has(username)) {
+      if (!username) {
+        username = getLocalizedString("noUsername");
+      }
+      let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
+      let time = this._dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
+      username = getLocalizedString("loginHostAge", [username, time]);
+    }
+
+    return username;
   },
 
   getCommentAt(index) {
@@ -1309,8 +1373,9 @@ UserAutoCompleteResult.prototype = {
   },
 
   removeValueAt(index, removeFromDB) {
-    if (index < 0 || index >= this.matchCount)
-        throw new Error("Index out of range.");
+    if (index < 0 || index >= this.matchCount) {
+      throw new Error("Index out of range.");
+    }
 
     if (this._showInsecureFieldWarning && index === 0) {
       // Ignore the warning message item.

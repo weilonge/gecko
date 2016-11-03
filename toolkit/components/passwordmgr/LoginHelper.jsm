@@ -22,6 +22,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 
 // LoginHelper
 
@@ -36,6 +37,7 @@ this.LoginHelper = {
   formlessCaptureEnabled: Services.prefs.getBoolPref("signon.formlessCapture.enabled"),
   schemeUpgrades: Services.prefs.getBoolPref("signon.schemeUpgrades"),
   insecureAutofill: Services.prefs.getBoolPref("signon.autofillForms.http"),
+  showInsecureFieldWarning: Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled"),
 
   createLogger(aLogPrefix) {
     let getMaxLogLevel = () => {
@@ -52,11 +54,17 @@ this.LoginHelper = {
 
     // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
     Services.prefs.addObserver("signon.", () => {
+      console.log("sigon. changed");
       this.debug = Services.prefs.getBoolPref("signon.debug");
       this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
       logger.maxLogLevel = getMaxLogLevel();
+    }, false);
+
+    Services.prefs.addObserver("security.insecure_field_warning.", () => {
+      console.log("security.insecure_field_warning. changed");
+      this.showInsecureFieldWarning = Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled");
     }, false);
 
     return logger;
