@@ -1221,6 +1221,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="adjustHeight">
         <body>
           <![CDATA[
+          console.trace();
+          //window.requestAnimationFrame(() => {
           // Figure out how many rows to show
           let rows = this.richlistbox.childNodes;
           let numRows = Math.min(this._matchCount, this.maxRows, rows.length);
@@ -1230,8 +1232,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
+            console.log('KKK: height[A]', height);
             let firstRowRect = rows[0].getBoundingClientRect();
             if (this._rlbPadding == undefined) {
+              console.log('KKK: height[A-1]', height);
               let style = window.getComputedStyle(this.richlistbox);
 
               let transition = style.transitionProperty;
@@ -1243,6 +1247,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             }
 
             if (numRows > this.maxRows) {
+              console.log('KKK: height[A-2]', height);
               // Set a fixed max-height to avoid flicker when growing the panel.
               let lastVisibleRowRect = rows[this.maxRows - 1].getBoundingClientRect();
               let visibleHeight = lastVisibleRowRect.bottom - firstRowRect.top;
@@ -1250,37 +1255,56 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 visibleHeight + this._rlbPadding + "px";
             }
 
+            //console.log('KKK: height[A-3]', height);
+            //console.log('AB getBoundingClientRect 1stRow.height', rows[0].getBoundingClientRect().height);
+            //console.log('AB getComputedStyle 1stRow.height', window.getComputedStyle(rows[0]).height);
+
+            rows[0]._handleOverflow();
+
+            console.log('KKK: height[A-3]', height);
+            console.log('AA getBoundingClientRect 1stRow.height', rows[0].getBoundingClientRect().height);
+            console.log('AA getComputedStyle 1stRow.height', window.getComputedStyle(rows[0]).height);
             let lastRowRect = rows[numRows - 1].getBoundingClientRect();
             // Calculate the height to have the first row to last row shown
+            console.log('AA lastRowRect.bottom', lastRowRect.bottom);
             height = lastRowRect.bottom - firstRowRect.top +
                      this._rlbPadding;
+            console.log('KKK: height[A-4]', height);
           }
 
+          console.log('KKK: height[B]', height);
           let animate = this._rlbAnimated &&
                         this.getAttribute("dontanimate") != "true";
           let currentHeight = this.richlistbox.getBoundingClientRect().height;
           if (height > currentHeight) {
+            console.log('KKK: height[C-1]', height);
             // Grow immediately.
             if (animate) {
+              console.log('KKK: height[C-1-1A]', height);
               this.richlistbox.removeAttribute("height");
               this.richlistbox.style.height = height + "px";
             } else {
+              console.log('KKK: height[C-1-2A]', height);
               this.richlistbox.style.removeProperty("height");
               this.richlistbox.height = height;
             }
           } else {
+            console.log('KKK: height[C-2]', height);
             // Delay shrinking to avoid flicker.
             this._shrinkTimeout = setTimeout(() => {
               this._collapseUnusedItems();
               if (animate) {
+                console.log('KKK: height[C-2-1A]', height);
                 this.richlistbox.removeAttribute("height");
                 this.richlistbox.style.height = height + "px";
               } else {
+                console.log('KKK: height[C-2-2A]', height);
                 this.richlistbox.style.removeProperty("height");
                 this.richlistbox.height = height;
               }
             }, this.mInput.shrinkDelay);
           }
+          //});
           ]]>
         </body>
       </method>
@@ -1289,6 +1313,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         <parameter name="invalidateReason"/>
         <body>
           <![CDATA[
+          console.log("autocomplete-rich-result-popup", "_appendCurrentResult");
+          //console.trace();
           var controller = this.mInput.controller;
           var matchCount = this._matchCount;
           var existingItemsCount = this.richlistbox.childNodes.length;
@@ -1370,7 +1396,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             setTimeout(() => {
               let changed = item.adjustSiteIconStart(this._siteIconStart);
               if (changed) {
+                console.log("B:handleOverUnderflow item", i, ":", window.getComputedStyle(item).height);
                 item.handleOverUnderflow();
+                console.log("A:handleOverUnderflow item", i, ":", window.getComputedStyle(item).height);
               }
             }, 0);
 
@@ -1653,6 +1681,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_onOverflow">
         <body>
           <![CDATA[
+          console.log("autocomplete-richlistitem", "_onOverflow");
+          //console.trace();
           this._inOverflow = true;
           this._handleOverflow();
           ]]>
