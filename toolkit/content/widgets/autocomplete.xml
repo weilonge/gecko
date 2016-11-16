@@ -1250,6 +1250,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 visibleHeight + this._rlbPadding + "px";
             }
 
+            for (let i = 0; i < numRows; i++) {
+              rows[i]._handleOverflow();
+            }
             let lastRowRect = rows[numRows - 1].getBoundingClientRect();
             // Calculate the height to have the first row to last row shown
             height = lastRowRect.bottom - firstRowRect.top +
