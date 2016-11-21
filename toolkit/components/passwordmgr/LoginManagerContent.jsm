@@ -1246,12 +1246,6 @@ function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messag
   this._isPasswordField = isPasswordField;
   this._isSecure = isSecure;
 
-  Services.prefs.addObserver("security.insecure_field_warning.contextual.enabled",
-                             this.updateWithPrefChange.bind(this), false);
-
-  Services.prefs.addObserver("signon.autofillForms.http",
-                             this.updateWithPrefChange.bind(this), false);
-
   this.updateWithPrefChange();
 }
 
