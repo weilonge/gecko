@@ -23,6 +23,15 @@ richlistitem[type="download"].download-state[state="1"]:not([exists]) > toolbars
   display: none;
 }
 
+#downloadsListBox richlistitem.download-state:hover > .downloadMainArea > .downloadContainer > description.downloadDetailsNormal,
+#downloadsListBox richlistitem.download-state:not(:hover) > .downloadMainArea > .downloadContainer > description.downloadDetailsHover {
+  display: none;
+}
+
+#downloadsRichListBox richlistitem.download-state > .downloadMainArea > .downloadContainer > description.downloadDetailsHover {
+  display: none;
+}
+
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
 #downloadsFooter:not([showingsummary]) #downloadsSummary {

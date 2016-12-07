@@ -172,6 +172,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     let status = this.statusTextAndTip;
     this.element.setAttribute("status", status.text);
     this.element.setAttribute("statusTip", status.tip);
+    this.element.setAttribute("hoverStatus", status.hoverStatus);
   },
 
   lastEstimatedSecondsLeft: Infinity,
@@ -193,6 +194,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
 
     let text = "";
     let tip = "";
+    let hoverStatus = "";
 
     if (!this.download.stopped) {
       let totalBytes = this.download.hasProgress ? this.download.totalBytes
@@ -216,10 +218,17 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     } else if (!this.download.succeeded && !this.download.canceled &&
                !this.download.error) {
       text = s.stateStarting;
+    } else if (this.download.succeeded && !this.download.target.exists) {
+      text = s.fileMovedOrMissing;
     } else {
-      let stateLabel;
+      let referrer = this.download.source.referrer || this.download.source.url;
+      let [displayHost, fullHost] = DownloadUtils.getURIHost(referrer);
+
+      let date = new Date(this.download.endTime);
+      let [displayDate, fullDate] = DownloadUtils.getReadableDates(date);
 
       if (this.download.succeeded) {
+        let stateLabel;
         // For completed downloads, show the file size (e.g. "1.5 MB").
         if (this.download.target.size !== undefined) {
           let [size, unit] =
@@ -229,28 +238,30 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
           // History downloads may not have a size defined.
           stateLabel = s.sizeUnknown;
         }
+        let firstPart = s.statusSeparator(stateLabel, displayHost);
+        text = s.statusSeparator(firstPart, displayDate);
+        hoverStatus = s.openFile;
       } else if (this.download.canceled) {
-        stateLabel = s.stateCanceled;
+        text = s.stateCanceled;
+        let firstPart = s.statusSeparator(text, displayHost);
+        hoverStatus = s.statusSeparator(firstPart, displayDate);
       } else if (this.download.error.becauseBlockedByParentalControls) {
-        stateLabel = s.stateBlockedParentalControls;
+        let firstPart = s.statusSeparator(s.stateBlockedParentalControls,
+                                          displayHost);
+        text = s.statusSeparator(firstPart, displayDate);
       } else if (this.download.error.becauseBlockedByReputationCheck) {
-        stateLabel = this.rawBlockedTitleAndDetails[0];
+        text = this.rawBlockedTitleAndDetails[0];
+        hoverStatus = s.showMoreInformation;
       } else {
-        stateLabel = s.stateFailed;
+        text = s.stateFailed;
+        let firstPart = s.statusSeparator(text, displayHost);
+        hoverStatus = s.statusSeparator(firstPart, displayDate);
       }
 
-      let referrer = this.download.source.referrer || this.download.source.url;
-      let [displayHost, fullHost] = DownloadUtils.getURIHost(referrer);
-
-      let date = new Date(this.download.endTime);
-      let [displayDate, fullDate] = DownloadUtils.getReadableDates(date);
-
-      let firstPart = s.statusSeparator(stateLabel, displayHost);
-      text = s.statusSeparator(firstPart, displayDate);
       tip = s.statusSeparator(fullHost, fullDate);
     }
 
-    return { text, tip: tip || text };
+    return { text, tip: tip || text, hoverStatus: hoverStatus || text };
   },
 
   /**
