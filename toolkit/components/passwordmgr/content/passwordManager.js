@@ -127,7 +127,6 @@ let signonsTreeView = {
   _invalidateTask: new DeferredTask(() => {
     signonsTree.treeBoxObject.invalidateColumn(signonsTree.columns.siteCol);
   }, 10),
-  _lastSelectedRanges: [],
   selection: null,
 
   rowCount: 0,
@@ -230,9 +229,6 @@ let signonsTreeView = {
 
 function SortTree(column, ascending) {
   let table = GetVisibleLogins();
-  // remember which item was selected so we can restore it after the sort
-  let selections = GetTreeSelections();
-  let selectedNumber = selections.length ? table[selections[0]].number : -1;
 
   function compareFunc(a, b) {
     let valA, valB;
@@ -270,26 +266,8 @@ function SortTree(column, ascending) {
     table.reverse();
   }
 
-  // restore the selection
-  let selectedRow = -1;
-  if (selectedNumber >= 0 && false) {
-    for (let s = 0; s < table.length; s++) {
-      if (table[s].number == selectedNumber) {
-        // update selection
-        // note: we need to deselect before reselecting in order to trigger ...Selected()
-        signonsTree.view.selection.select(-1);
-        signonsTree.view.selection.select(s);
-        selectedRow = s;
-        break;
-      }
-    }
-  }
-
   // display the results
   signonsTree.treeBoxObject.invalidate();
-  if (selectedRow >= 0) {
-    signonsTree.treeBoxObject.ensureRowIsVisible(selectedRow);
-  }
 }
 
 function LoadSignons() {
@@ -343,6 +321,27 @@ function GetTreeSelections() {
     }
   }
   return selections;
+}
+
+function StoreSelections(selections) {
+  let selectedSignons = [];
+  let filterSet = signonsTreeView._filterSet;
+  let table = filterSet.length ? filterSet : signons;
+  for (let index of selections) {
+    selectedSignons.push(table[index].guid);
+  }
+  return selectedSignons;
+}
+
+function RestoreSelections(selectedSignons) {
+  let filterSet = signonsTreeView._filterSet;
+  let table = filterSet.length ? filterSet : signons;
+  signonsTreeView.selection.clearSelection();
+  for (let i = 0; i < table.length; i++) {
+    if (selectedSignons.includes(table[i].guid)) {
+      signonsTreeView.selection.rangedSelect(i, i, true);
+    }
+  }
 }
 
 function SignonSelected() {
@@ -515,6 +514,7 @@ function getColumnByName(column) {
 }
 
 function SignonColumnSort(column) {
+  let selectedSignons = StoreSelections(GetTreeSelections());
   let sortedCol = getColumnByName(column);
   let lastSortedCol = getColumnByName(lastSignonSortColumn);
 
@@ -532,11 +532,10 @@ function SignonColumnSort(column) {
   // first we need to get the right element
   sortedCol.setAttribute("sortDirection", lastSignonSortAscending ?
                                           "ascending" : "descending");
+  RestoreSelections(selectedSignons);
 }
 
 function SignonClearFilter() {
-  let singleSelection = (signonsTreeView.selection.count == 1);
-
   // Clear the Tree Display
   signonsTreeView.rowCount = 0;
   signonsTree.treeBoxObject.rowCountChanged(0, -signonsTreeView._filterSet.length);
@@ -544,18 +543,6 @@ function SignonClearFilter() {
 
   // Just reload the list to make sure deletions are respected
   LoadSignons();
-
-  // Restore selection
-  if (singleSelection) {
-    signonsTreeView.selection.clearSelection();
-    for (let i = 0; i < signonsTreeView._lastSelectedRanges.length; ++i) {
-      let range = signonsTreeView._lastSelectedRanges[i];
-      signonsTreeView.selection.rangedSelect(range.min, range.max, true);
-    }
-  } else {
-    signonsTreeView.selection.select(0);
-  }
-  signonsTreeView._lastSelectedRanges = [];
 
   signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAll.label"));
@@ -589,30 +576,15 @@ function _filterPasswords(aFilterValue, view) {
   return signons.filter(s => SignonMatchesFilter(s, aFilterValue));
 }
 
-function SignonSaveState() {
-  // Save selection
-  let seln = signonsTreeView.selection;
-  signonsTreeView._lastSelectedRanges = [];
-  let rangeCount = seln.getRangeCount();
-  for (let i = 0; i < rangeCount; ++i) {
-    let min = {}; let max = {};
-    seln.getRangeAt(i, min, max);
-    signonsTreeView._lastSelectedRanges.push({ min: min.value, max: max.value });
-  }
-}
-
 function FilterPasswords() {
+  let selectedSignons = StoreSelections(GetTreeSelections());
   if (filterField.value == "") {
     SignonClearFilter();
+    RestoreSelections(selectedSignons);
     return;
   }
 
   let newFilterSet = _filterPasswords(filterField.value, signonsTreeView);
-  if (!signonsTreeView._filterSet.length) {
-    // Save Display Info for the Non-Filtered mode when we first
-    // enter Filtered mode.
-    SignonSaveState();
-  }
   signonsTreeView._filterSet = newFilterSet;
 
   // Clear the display
@@ -630,6 +602,7 @@ function FilterPasswords() {
   signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionFiltered");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAllShown.label"));
   removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAllShown.accesskey"));
+  RestoreSelections(selectedSignons);
 }
 
 function CopyPassword() {

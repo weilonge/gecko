@@ -46,6 +46,9 @@ add_task(function* test() {
         "mozilla",
         "mozilla.com",
     ];
+
+    const usernameSelections = ["username", "my username", "my user name"];
+
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                  Ci.nsILoginInfo, "init");
     for (let i = 0; i < 10; i++)
@@ -107,6 +110,24 @@ add_task(function* test() {
             setTimeout(runNextTest, 0);
         }
 
+        function selectItemsByUsername(usernames) {
+          let entries = getColumnEntries(1);
+          for (let username of usernames) {
+            let index = entries.indexOf(username);
+            ok(index != -1, "Username is able to be selected.");
+            sTree.view.selection.rangedSelect(index, index, true);
+          }
+        }
+
+        function checkItemSelections(usernames) {
+          let entries = getColumnEntries(1);
+          for (let username of usernames) {
+            let index = entries.indexOf(username);
+            ok(sTree.view.selection.isSelected(index), "Username must be a selected one.");
+          }
+          sTree.view.selection.clearSelection();
+        }
+
         function checkSortMarkers(activeCol) {
             let isOk = true;
             let col = null;
@@ -150,46 +171,59 @@ add_task(function* test() {
         function runNextTest() {
             switch (testCounter++) {
             case 0:
+                selectItemsByUsername(usernameSelections);
                 expectedValues = urls.slice().sort();
                 checkColumnEntries(0, expectedValues);
                 checkSortDirection(siteCol, true);
+                checkItemSelections(usernameSelections);
                 // Toggle sort direction on Host column
                 clickCol(siteCol);
                 break;
             case 1:
+                selectItemsByUsername(usernameSelections);
                 expectedValues.reverse();
                 checkColumnEntries(0, expectedValues);
                 checkSortDirection(siteCol, false);
+                checkItemSelections(usernameSelections);
                 // Sort by Username
                 clickCol(userCol);
                 break;
             case 2:
+                selectItemsByUsername(usernameSelections);
                 expectedValues = users.slice().sort();
                 checkColumnEntries(1, expectedValues);
                 checkSortDirection(userCol, true);
+                checkItemSelections(usernameSelections);
                 // Sort by Password
                 clickCol(passwordCol);
                 break;
             case 3:
+                selectItemsByUsername(usernameSelections);
                 expectedValues = pwds.slice().sort();
                 checkColumnEntries(2, expectedValues);
                 checkSortDirection(passwordCol, true);
+                checkItemSelections(usernameSelections);
                 // Set filter
                 setFilter("moz");
                 break;
             case 4:
+                // Customize the username list due to filter here.
+                selectItemsByUsername(["my username", "my user name"]);
                 expectedValues = [ "absolutely", "mozilla", "mozilla.com",
                                    "mypass", "mypass", "super secret",
                                    "very secret" ];
                 checkColumnEntries(2, expectedValues);
                 checkSortDirection(passwordCol, true);
+                checkItemSelections(["my username", "my user name"]);
                 // Reset filter
                 setFilter("");
                 break;
             case 5:
+                selectItemsByUsername(usernameSelections);
                 expectedValues = pwds.slice().sort();
                 checkColumnEntries(2, expectedValues);
                 checkSortDirection(passwordCol, true);
+                checkItemSelections(usernameSelections);
                 // cleanup
                 Services.ww.registerNotification(function(aSubject, aTopic, aData) {
                     // unregister ourself
