@@ -999,6 +999,14 @@ const DownloadsView = {
     }
   },
 
+  onDownloadButtonMouseOver(aEvent) {
+    aEvent.target.parentNode.parentNode.classList.add("downloadShowIconDesc");
+  },
+
+  onDownloadButtonMouseOut(aEvent) {
+    aEvent.target.parentNode.parentNode.classList.remove("downloadShowIconDesc");
+  },
+
   /**
    * Mouse listeners to handle selection on hover.
    */

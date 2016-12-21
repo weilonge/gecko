@@ -24,11 +24,15 @@ richlistitem[type="download"].download-state[state="1"]:not([exists]) > toolbars
 }
 
 #downloadsListBox richlistitem.download-state:hover > .downloadMainArea > .downloadContainer > description.downloadDetailsNormal,
-#downloadsListBox richlistitem.download-state:not(:hover) > .downloadMainArea > .downloadContainer > description.downloadDetailsHover {
+#downloadsListBox richlistitem.download-state:not(:hover) > .downloadMainArea > .downloadContainer > description.downloadDetailsHover,
+#downloadsListBox richlistitem.download-state.downloadShowIconDesc > .downloadMainArea > .downloadContainer > description.downloadDetailsNormal,
+#downloadsListBox richlistitem.download-state.downloadShowIconDesc > .downloadMainArea > .downloadContainer > description.downloadDetailsHover,
+#downloadsListBox richlistitem.download-state:not(.downloadShowIconDesc) > .downloadMainArea > .downloadContainer > stack.downloadButtonDesc {
   display: none;
 }
 
-#downloadsRichListBox richlistitem.download-state > .downloadMainArea > .downloadContainer > description.downloadDetailsHover {
+#downloadsRichListBox richlistitem.download-state > .downloadMainArea > .downloadContainer > description.downloadDetailsHover,
+#downloadsRichListBox richlistitem.download-state > .downloadMainArea > .downloadContainer > stack.downloadButtonDesc {
   display: none;
 }
 
@@ -187,6 +191,13 @@ richlistitem.download button {
 
 /* The "show blocked info" button is shown only in the downloads panel. */
 .downloadShowBlockedInfo
+{
+  display: none;
+}
+
+.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
+                                           .downloadButtonDescShowMoreInfo
+
 {
   display: none;
 }

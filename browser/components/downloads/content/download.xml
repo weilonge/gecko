@@ -52,10 +52,34 @@
           <xul:description class="downloadDetails downloadDetailsHover"
                            crop="end"
                            xbl:inherits="value=hoverStatus,tooltiptext=statusTip"/>
+          <xul:stack class="downloadButtonDesc">
+            <xul:description class="downloadDetails downloadShow"
+                             crop="end"
+#ifdef XP_MACOSX
+                             value="&cmd.showMac.label;"
+#else
+                             value="&cmd.show.label;"
+#endif
+                             xbl:inherits="tooltiptext=statusTip"/>
+            <xul:description class="downloadDetails downloadCancel"
+                             crop="end"
+                             value="&cmd.cancel.label;"
+                             xbl:inherits="tooltiptext=statusTip"/>
+            <xul:description class="downloadDetails downloadRetry"
+                             crop="end"
+                             value="&cmd.retry.label;"
+                             xbl:inherits="tooltiptext=statusTip"/>
+            <xul:description class="downloadDetails downloadButtonDescShowMoreInfo"
+                             crop="end"
+                             value="&showMoreInformation.label;"
+                             xbl:inherits="tooltiptext=statusTip"/>
+          </xul:stack>
         </xul:vbox>
       </xul:hbox>
       <xul:toolbarseparator />
-      <xul:stack class="downloadButtonArea">
+      <xul:stack class="downloadButtonArea"
+                 onmouseover="DownloadsView.onDownloadButtonMouseOver(event);"
+                 onmouseout="DownloadsView.onDownloadButtonMouseOut(event);">
         <xul:button class="downloadButton downloadCancel downloadIconCancel"
                     tooltiptext="&cmd.cancel.label;"
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_cancel');"/>
