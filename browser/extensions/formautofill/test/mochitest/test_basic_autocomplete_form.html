@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: simple form profile autofill
+
+<script>
+
+var expectingPopup = null;
+
+function expectPopup() {
+  info("expecting a popup");
+  return new Promise(resolve => {
+    expectingPopup = resolve;
+  });
+}
+
+function popupShownListener() {
+  info("popup shown for test ");
+  if (expectingPopup) {
+    expectingPopup();
+    expectingPopup = null;
+  }
+}
+
+function setInput(input, value) {
+  input.value = value;
+  input.focus();
+}
+
+function setupTest(id, str) {
+  let element = document.getElementById(id);
+  markAsAutofillField(element);
+  setInput(element, str);
+}
+
+function* runTests() {
+  setupTest("name", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(["Mary", "John"]);
+
+  setupTest("address", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(["Mary", "John"]);
+
+  setupTest("tel", "");
+  doKey("down");
+  yield expectPopup();
+  checkMenuEntries(["Mary", "John"]);
+
+  SimpleTest.finish();
+}
+
+function startTest() {
+  //TODO: Setup storage
+  spawn_task(runTests);
+}
+
+registerPopupShownListener(popupShownListener);
+SimpleTest.waitForExplicitFinish();
+window.onload = startTest;
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is form 1.</p>
+    <input type="text" id="name"><br>
+    <input type="text" id="address"><br>
+    <input type="text" id="tel">
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>
+
