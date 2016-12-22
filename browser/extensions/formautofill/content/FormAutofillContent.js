@@ -10,7 +10,99 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
 
-let {FormAutoCompleteResult} = Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm", {});
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
+                                  "resource://gre/modules/FormLikeFactory.jsm");
+
+const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
+                             .getService(Ci.nsIFormFillController);
+
+const AUTOFILL_FIELDS_THRESHOLD = 3;
+
+let FormAutofillContent = {
+  init() {
+    ProfileAutocomplete.ensureRegistered();
+
+    addEventListener("DOMContentLoaded", this);
+  },
+
+  handleEvent(evt) {
+    if (!evt.isTrusted) {
+      return;
+    }
+
+    switch(evt.type) {
+      case "DOMContentLoaded":
+        let doc = evt.target;
+        if (!(doc instanceof Ci.nsIDOMHTMLDocument)) {
+          return;
+        }
+        this._markAutofillFields(doc);
+        break;
+    }
+  },
+
+  _markAutofillFields(doc) {
+    let forms = [];
+
+    for (let field of doc.getElementsByTagName("input")) {
+      if (!field.form) {
+        let formLike = FormLikeFactory.createFromField(field);
+        if (!forms.some(form => form.rootElement === formLike.rootElement)) {
+          forms.push(formLike);
+        }
+      }
+    }
+
+    for (let form of doc.forms) {
+      let formLike = FormLikeFactory.createFromForm(form);
+      forms.push(formLike);
+    }
+
+    forms.forEach(form => {
+      let autofillFields = this._filterAutofillFields(form);
+      if (autofillFields.length < AUTOFILL_FIELDS_THRESHOLD) {
+        return;
+      }
+      autofillFields.forEach(
+        field => formFillController.markAsAutofillField(field));
+    });
+  },
+
+  _filterAutofillFields(form) {
+    return form.elements
+               .filter(element => FormAutofillHeuristics.getInfo(element));
+  },
+};
+
+let FormAutofillHeuristics = {
+  VALID_FIELDS: [
+    "organization",
+    "street-address",
+    "address-level2",
+    "address-level1",
+    "postal-code",
+    "country",
+    "tel",
+    "email",
+  ],
+
+  getInfo(element) {
+    if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
+      return null;
+    }
+
+    let info = element.getAutocompleteInfo();
+    if (!info || !info.fieldName ||
+        !this.VALID_FIELDS.includes(info.fieldName)) {
+      return null;
+    }
+
+    return info;
+  },
+};
 
 /**
  * Handles profile autofill for a DOM Form element.
@@ -60,8 +152,8 @@ FormAutofillHandler.prototype = {
       }
 
       // Exclude elements to which no autocomplete field has been assigned.
-      let info = element.getAutocompleteInfo();
-      if (!info.fieldName || ["on", "off"].includes(info.fieldName)) {
+      let info = FormAutofillHeuristics.getInfo(element);
+      if (!info) {
         continue;
       }
 
@@ -119,8 +211,9 @@ FormAutofillHandler.prototype = {
         continue;
       }
 
-      let info = fieldDetail.element.getAutocompleteInfo();
-      if (field.section != info.section ||
+      let info = FormAutofillHeuristics.getInfo(fieldDetail.element);
+      if (!info ||
+          field.section != info.section ||
           field.addressType != info.addressType ||
           field.contactType != info.contactType ||
           field.fieldName != info.fieldName) {
@@ -237,4 +330,4 @@ let ProfileAutocomplete = {
   },
 };
 
-ProfileAutocomplete.ensureRegistered();
+FormAutofillContent.init();
