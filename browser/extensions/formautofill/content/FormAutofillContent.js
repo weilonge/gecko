@@ -243,9 +243,28 @@ AutofillProfileAutoCompleteSearch.prototype = {
         return;
       }
 
+      // TODO: These mock data should be replaced by form autofill API
+      let fieldName = "organization";
+      profiles = [{
+        guid: "test-guid-1",
+        organization: "Sesame Street",
+        streetAddress: "123 Sesame Street.",
+        tel: "1-345-345-3456.",
+      }, {
+        guid: "test-guid-2",
+        organization: "Mozilla",
+        streetAddress: "331 E. Evelyn Avenue",
+        tel: "1-650-903-0800",
+      }];
+
       // TODO: Set formInfo for ProfileAutoCompleteResult
       // let formInfo = this.getFormDetails();
-      let result = new ProfileAutoCompleteResult(searchString, info, profiles, {});
+      let existingFieldNames = ["organization", "tel", "streetAddress"];
+      let result = new ProfileAutoCompleteResult(searchString,
+                                                 fieldName,
+                                                 existingFieldNames,
+                                                 profiles,
+                                                 {});
 
       listener.onSearchResult(this, result);
     });
@@ -339,10 +358,18 @@ let ProfileAutocomplete = {
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
+  MESSAGES: [
+    "FormAutoComplete:HandleEnter",
+  ],
+
   init() {
     ProfileAutocomplete.ensureRegistered();
 
     addEventListener("DOMContentLoaded", this);
+
+    for (let messageName of this.MESSAGES) {
+      addMessageListener(messageName, this);
+    }
   },
 
   handleEvent(evt) {
@@ -392,10 +419,38 @@ var FormAutofillContent = {
   getFormDetails(element) {
     for (let formDetails of this._formsDetails) {
       if (formDetails.some((detail) => detail.element == element)) {
-        return formDetails.map((detail) => this._serializeInfo(detail));
+        return formDetails;
       }
     }
     return null;
+  },
+
+  receiveMessage(message) {
+    let data = message.data;
+    if (!data.isPopupSelection ||
+        data.selectedIndex == -1 ||
+        data.fullResult.style != "autofill-profile") {
+      return;
+    }
+
+    let profile = JSON.parse(data.fullResult.comment);
+    console.log(profile);
+
+    function _camelCase(str) {
+      return str.toLowerCase().replace(/-([a-z])/g, s => s[1].toUpperCase());
+    }
+
+    let formDetails = this.getFormDetails(formFillController.getFocusedInput());
+    for (let inputInfo of formDetails) {
+      if (inputInfo.element === formFillController.getFocusedInput()) {
+        continue;
+      }
+      let value = profile[_camelCase(inputInfo.fieldName)];
+      if (value) {
+        console.log(inputInfo);
+        inputInfo.element.value = value;
+      }
+    }
   },
 
   /**

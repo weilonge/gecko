@@ -275,10 +275,22 @@ this.AutoCompletePopup = {
    */
   handleEnter(aIsPopupSelection) {
     if (this.openedPopup) {
-      this.sendMessageToBrowser("FormAutoComplete:HandleEnter", {
-        selectedIndex: this.openedPopup.selectedIndex,
+      let selectedIndex = this.openedPopup.selectedIndex;
+      let messageData = {
+        selectedIndex,
         isPopupSelection: aIsPopupSelection,
-      });
+      };
+      if (aIsPopupSelection && this.openedPopup.selectedIndex !== -1) {
+/*
+        let popup = this.openedPopup;
+        messageData.value = popup.view.getValueAt(selectedIndex);
+        messageData.label = popup.view.getLabelAt(selectedIndex);
+        messageData.comment = popup.view.getCommentAt(selectedIndex);
+        messageData.style = popup.view.getStyleAt(selectedIndex);
+*/
+        messageData.fullResult = this.openedPopup.view.results[selectedIndex];
+      }
+      this.sendMessageToBrowser("FormAutoComplete:HandleEnter", messageData);
     }
   },
 
