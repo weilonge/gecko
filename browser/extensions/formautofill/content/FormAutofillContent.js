@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global sendSyncMessage */
+
 /* eslint-disable no-use-before-define */
 
 /*
@@ -12,6 +14,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAutoCompleteResult",
@@ -234,14 +237,19 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
     this.getProfiles({info, searchString}).then((profiles) => {
       if (this.forceStop) {
+        // TODO: we should clear the cache of inputDetails and formsDetails
+        // while implementing the cache codes.
         return;
       }
 
-      // TODO: Set formInfo for ProfileAutoCompleteResult
-      // let formInfo = this.getFormDetails();
-      let result = new ProfileAutoCompleteResult(searchString, info, profiles, {});
+      let result = new ProfileAutoCompleteResult(searchString,
+                                                 info.fieldName,
+                                                 this.getAllFieldNames(),
+                                                 profiles,
+                                                 {});
 
       listener.onSearchResult(this, result);
+      FormAutofillContent.setProfileAutoCompleteResult(result);
     });
   },
 
@@ -285,7 +293,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   getInputDetails() {
     // TODO: Maybe we'll need to wait for cache ready if detail is empty.
-    return FormAutofillContent.getInputDetails(formFillController.focusedInput);
+    return FormAutofillContent.getSerializedInputDetails(formFillController.focusedInput);
   },
 
   /**
@@ -297,6 +305,10 @@ AutofillProfileAutoCompleteSearch.prototype = {
   getFormDetails() {
     // TODO: Maybe we'll need to wait for cache ready if details is empty.
     return FormAutofillContent.getFormDetails(formFillController.focusedInput);
+  },
+
+  getAllFieldNames() {
+    return FormAutofillContent.getAllFieldNames(formFillController.focusedInput);
   },
 };
 
@@ -333,6 +345,8 @@ let ProfileAutocomplete = {
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
+  _lastAutoCompleteResult: null,
+
   init() {
     addEventListener("DOMContentLoaded", this);
 
@@ -344,6 +358,8 @@ var FormAutofillContent = {
       }
     });
     sendAsyncMessage("FormAutofill:getEnabledStatus");
+
+    Services.obs.addObserver(this, "autocomplete-will-enter-text", false);
   },
 
   handleEvent(evt) {
@@ -352,13 +368,14 @@ var FormAutofillContent = {
     }
 
     switch (evt.type) {
-      case "DOMContentLoaded":
+      case "DOMContentLoaded": {
         let doc = evt.target;
         if (!(doc instanceof Ci.nsIDOMHTMLDocument)) {
           return;
         }
         this._identifyAutofillFields(doc);
         break;
+      }
     }
   },
 
@@ -374,11 +391,22 @@ var FormAutofillContent = {
     for (let formDetails of this._formsDetails) {
       for (let detail of formDetails) {
         if (element == detail.element) {
-          return this._serializeInfo(detail);
+          return detail;
         }
       }
     }
     return null;
+  },
+
+  /**
+   * Get the input's information in the serialized format.
+   *
+   * @param {HTMLInputElement} element Focused input which triggered profile searching
+   * @returns {Object|null}
+   *          Return target input's information in the serialized format.
+   */
+  getSerializedInputDetails(element) {
+    return this._serializeInfo(this.getInputDetails(element));
   },
 
   /**
@@ -393,10 +421,62 @@ var FormAutofillContent = {
   getFormDetails(element) {
     for (let formDetails of this._formsDetails) {
       if (formDetails.some((detail) => detail.element == element)) {
-        return formDetails.map((detail) => this._serializeInfo(detail));
+        return formDetails;
       }
     }
     return null;
+  },
+
+  getAllFieldNames(element) {
+    let formDetails = this.getFormDetails(element);
+    return formDetails.map(record => record.fieldName);
+  },
+
+  setProfileAutoCompleteResult(result) {
+    this._lastAutoCompleteResult = result;
+  },
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "autocomplete-will-enter-text": {
+        this._fillInFields();
+        break;
+      }
+    }
+  },
+
+  _fillInFields() {
+    let formDetails = this.getFormDetails(formFillController.focusedInput);
+    if (!formDetails) {
+      // The observer notification was for a different frame.
+      return;
+    }
+
+    let selectedIndexResult = sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
+    if (selectedIndexResult.length != 1 || !Number.isInteger(selectedIndexResult[0])) {
+      throw new Error("Invalid autocomplete selectedIndex");
+    }
+    let selectedIndex = selectedIndexResult[0];
+
+    if (selectedIndex == -1 ||
+        !this._lastAutoCompleteResult ||
+        this._lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
+      return;
+    }
+
+    let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
+
+    for (let inputInfo of formDetails) {
+      // Skip filling the value of focused input which is filled in
+      // FormFillController.
+      if (inputInfo.element === formFillController.focusedInput) {
+        continue;
+      }
+      let value = profile[inputInfo.fieldName];
+      if (value) {
+        inputInfo.element.setUserInput(value);
+      }
+    }
   },
 
   /**

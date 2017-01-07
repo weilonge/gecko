@@ -10,12 +10,17 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillUtils",
+                                  "resource://formautofill/FormAutofillUtils.jsm");
+
 this.ProfileAutoCompleteResult = function(searchString,
-                                           fieldName,
-                                           matchingProfiles,
-                                           {resultCode = null}) {
+                                          focusedFieldName,
+                                          allFieldNames,
+                                          matchingProfiles,
+                                          {resultCode = null}) {
   this.searchString = searchString;
-  this._fieldName = fieldName;
+  this._focusedFieldName = focusedFieldName;
+  this._allFieldNames = allFieldNames;
   this._matchingProfiles = matchingProfiles;
 
   if (resultCode) {
@@ -25,6 +30,10 @@ this.ProfileAutoCompleteResult = function(searchString,
   } else {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
   }
+
+  this._popupLabels = this._generateLabels(this._focusedFieldName,
+                                           this._allFieldNames,
+                                           this._matchingProfiles);
 };
 
 ProfileAutoCompleteResult.prototype = {
@@ -42,10 +51,17 @@ ProfileAutoCompleteResult.prototype = {
   searchResult: null,
 
   // The autocomplete attribute of the focused input field
-  _fieldName: "",
+  _focusedFieldName: "",
+
+  // The autocomplete attributes of all input fields in the form.
+  _allFieldNames: null,
 
   // The matching profiles contains the information for filling forms.
   _matchingProfiles: null,
+
+  // The array contains the object of primary and secondary labels for each
+  // profiles.
+  _popupLabels: null,
 
   /**
    * @returns {number} The number of results
@@ -60,6 +76,53 @@ ProfileAutoCompleteResult.prototype = {
     }
   },
 
+  _getSecondaryLabel(focusedFieldName, allFieldNames, profile) {
+    /* TODO: Since "name" is a special case here, so the secondary "name" label
+       will be refined when the handling rule for "name" is ready.
+    */
+    const possibleNameFields = ["given-name", "additional-name", "family-name"];
+    focusedFieldName = possibleNameFields.includes(focusedFieldName) ?
+                       "name" : focusedFieldName;
+    if (!profile.name) {
+      profile.name = FormAutofillUtils.generateFullName(profile["given-name"],
+                                                        profile["family-name"],
+                                                        profile["additional-name"]);
+    }
+
+    const secondaryLabelOrder = [
+      "street-address",  // Street address
+      "name",            // Full name if needed
+      "address-level2",  // City/Town
+      "organization",    // Company or organization name
+      "address-level1",  // Province/State (Standardized code if possible)
+      "country",         // Country
+      "postal-code",     // Postal code
+      "tel",             // Phone number
+      "email",           // Email address
+    ];
+
+    for (const currentFieldName of secondaryLabelOrder) {
+      if (focusedFieldName != currentFieldName &&
+          allFieldNames.includes(currentFieldName) &&
+          profile[currentFieldName]) {
+        return profile[currentFieldName];
+      }
+    }
+
+    return ""; // Nothing matched.
+  },
+
+  _generateLabels(focusedFieldName, allFieldNames, profiles) {
+    return profiles.map(profile => {
+      return {
+        primary: profile[focusedFieldName],
+        secondary: this._getSecondaryLabel(focusedFieldName,
+                                           allFieldNames,
+                                           profile),
+      };
+    });
+  },
+
   /**
    * Retrieves a result
    * @param   {number} index The index of the result requested
@@ -67,12 +130,12 @@ ProfileAutoCompleteResult.prototype = {
    */
   getValueAt(index) {
     this._checkIndexBounds(index);
-    return this._matchingProfiles[index].guid;
+    return this._popupLabels[index].primary;
   },
 
   getLabelAt(index) {
     this._checkIndexBounds(index);
-    return this._matchingProfiles[index].organization;
+    return JSON.stringify(this._popupLabels[index]);
   },
 
   /**
@@ -82,7 +145,7 @@ ProfileAutoCompleteResult.prototype = {
    */
   getCommentAt(index) {
     this._checkIndexBounds(index);
-    return this._matchingProfiles[index].streetAddress;
+    return JSON.stringify(this._matchingProfiles[index]);
   },
 
   /**
