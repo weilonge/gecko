@@ -18,11 +18,6 @@ richlistitem[type="download"]:not([selected]) button {
   display: none;
 }
 
-richlistitem[type="download"].download-state[state="1"]:not([exists]) > .downloadButtonArea,
-richlistitem[type="download"].download-state[state="1"]:not([exists]) > toolbarseparator {
-  display: none;
-}
-
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
 #downloadsFooter:not([showingsummary]) #downloadsSummary {
@@ -164,11 +159,15 @@ richlistitem.download button {
 .download-state[state="8"].temporary-block:not([verdict="Uncommon"])
                                            .downloadChooseOpen,
 
-.download-state:not(:-moz-any([state="2"], /* Failed             */
+.download-state:not(:-moz-any([state="1"]:not([exists]), /* Deleted or moved */
+                              [state="2"], /* Failed             */
                               [state="3"]) /* Canceled           */)
                                            .downloadRetry,
 
 .download-state:not(          [state="1"]  /* Finished           */)
+                                           .downloadShow,
+
+.download-state[state="1"]:not([exists])   /* Deleted or moved   */
                                            .downloadShow,
 
 .download-state:-moz-any(     [state="6"], /* Blocked (parental) */

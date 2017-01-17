@@ -350,7 +350,7 @@ this.Download.prototype = {
    */
   start: function D_start() {
     // If the download succeeded, it's the final state, we have nothing to do.
-    if (this.succeeded) {
+    if (this.succeeded && this.target.exists) {
       return Promise.resolve();
     }
 

@@ -352,7 +352,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   isCommandEnabled(aCommand) {
     switch (aCommand) {
       case "downloadsCmd_retry":
-        return this.download.canceled || this.download.error;
+        return this.download.canceled || this.download.error || !this.download.target.exists;
       case "downloadsCmd_pauseResume":
         return this.download.hasPartialData && !this.download.error;
       case "downloadsCmd_openReferrer":
