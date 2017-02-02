@@ -35,15 +35,11 @@ var AutoCompleteResultView = {
   },
 
   getLabelAt(index) {
-    // Unused by richlist autocomplete - see getCommentAt.
-    return "";
+    return this.results[index].label;
   },
 
   getCommentAt(index) {
-    // The richlist autocomplete popup uses comment for its main
-    // display of an item, which is why we're returning the label
-    // here instead.
-    return this.results[index].label;
+    return this.results[index].comment;
   },
 
   getStyleAt(index) {
