@@ -13,6 +13,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAutoCompleteResult",
                                   "resource://formautofill/ProfileAutoCompleteResult.jsm");
@@ -370,6 +371,8 @@ var FormAutofillContent = {
     for (let messageName of this.MESSAGES) {
       addMessageListener(messageName, this);
     }
+
+    Services.obs.addObserver(this, "autocomplete-will-enter-text", false);
   },
 
   handleEvent(evt) {
@@ -450,6 +453,16 @@ var FormAutofillContent = {
         console.log(inputInfo);
         inputInfo.element.value = value;
       }
+    }
+  },
+
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "autocomplete-will-enter-text":
+        let input = aSubject.QueryInterface(Ci.nsIAutoCompleteInput);
+        //console.log(input);
+        //console.log(aData);
+        break;
     }
   },
 
