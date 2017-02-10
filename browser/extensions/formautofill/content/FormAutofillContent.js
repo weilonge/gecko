@@ -232,8 +232,14 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * @param {Object} listener the listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
+    console.log("startSearch " + FormAutofillContent._timeStamp);
     this.forceStop = false;
     let info = this.getInputDetails();
+    console.log(info);
+
+    if (!info) {
+      return;
+    }
 
     this.getProfiles({info, searchString}).then((profiles) => {
       if (this.forceStop) {
@@ -304,6 +310,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   getFormDetails() {
     // TODO: Maybe we'll need to wait for cache ready if details is empty.
+    console.log(formFillController.focusedInput);
     return FormAutofillContent.getFormDetails(formFillController.focusedInput);
   },
 
@@ -361,6 +368,9 @@ var FormAutofillContent = {
     });
     sendAsyncMessage("FormAutofill:getEnabledStatus");
 
+    this._timeStamp = Date.now();
+    console.log("FormAutofillContent init" + this._timeStamp);
+
     Services.obs.addObserver(this, "autocomplete-will-enter-text", false);
   },
 
@@ -391,6 +401,9 @@ var FormAutofillContent = {
    */
   getInputDetails(element) {
     let formDetails = this.getFormDetails(element);
+    if (!formDetails) {
+      return null;
+    }
     for (let detail of formDetails) {
       if (element == detail.element) {
         return detail;
@@ -421,7 +434,8 @@ var FormAutofillContent = {
    */
   getFormDetails(element) {
     let rootElement = FormLikeFactory.findRootForField(element);
-    return this._formsDetails.get(rootElement).fieldDetails;
+    let formDetails = this._formsDetails.get(rootElement);
+    return formDetails ? formDetails.fieldDetails : null;
   },
 
   getAllFieldNames(element) {

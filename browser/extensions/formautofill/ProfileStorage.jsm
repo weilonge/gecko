@@ -67,7 +67,7 @@ const VALID_FIELDS = [
 ];
 
 // TODO: Remove this once we can add profile from preference.
-const MOCK_MODE = false;
+const MOCK_MODE = true;
 const MOCK_STORAGE = [{
   guid: "test-guid-1",
   organization: "Sesame Street",
