@@ -345,6 +345,8 @@ let ProfileAutocomplete = {
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
+  _formsDetails: new WeakMap(),
+
   _lastAutoCompleteResult: null,
 
   init() {
@@ -388,11 +390,10 @@ var FormAutofillContent = {
    *          (or return null if the information is not found in the cache).
    */
   getInputDetails(element) {
-    for (let formDetails of this._formsDetails) {
-      for (let detail of formDetails) {
-        if (element == detail.element) {
-          return detail;
-        }
+    let formDetails = this.getFormDetails(element);
+    for (let detail of formDetails) {
+      if (element == detail.element) {
+        return detail;
       }
     }
     return null;
@@ -419,12 +420,8 @@ var FormAutofillContent = {
    *
    */
   getFormDetails(element) {
-    for (let formDetails of this._formsDetails) {
-      if (formDetails.some((detail) => detail.element == element)) {
-        return formDetails;
-      }
-    }
-    return null;
+    let rootElement = FormLikeFactory.findRootForField(element);
+    return this._formsDetails.get(rootElement).fieldDetails;
   },
 
   getAllFieldNames(element) {
@@ -495,7 +492,6 @@ var FormAutofillContent = {
 
   _identifyAutofillFields(doc) {
     let forms = [];
-    this._formsDetails = [];
 
     // Collects root forms from inputs.
     for (let field of doc.getElementsByTagName("input")) {
@@ -520,7 +516,7 @@ var FormAutofillContent = {
         return;
       }
 
-      this._formsDetails.push(formHandler.fieldDetails);
+      this._formsDetails.set(form.rootElement, formHandler);
       formHandler.fieldDetails.forEach(
         detail => this._markAsAutofillField(detail.element));
     });
