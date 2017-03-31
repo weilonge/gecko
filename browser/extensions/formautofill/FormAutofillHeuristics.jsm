@@ -14,11 +14,16 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+
 /**
  * Returns the autocomplete information of fields according to heuristics.
  */
 this.FormAutofillHeuristics = {
   VALID_FIELDS: [
+    "given-name",
+    "family-name",
     "organization",
     "street-address",
     "address-level2",
@@ -30,6 +35,29 @@ this.FormAutofillHeuristics = {
   ],
 
   VALID_LABELS: {
+    "given-name": new RegExp(
+      "first.*name|initials|fname|first$|given.*name" +
+      "|vorname" +                // de-DE
+      "|nombre" +                 // es
+      "|forename|prénom|prenom" + // fr-FR
+      "|名" +                     // ja-JP
+      "|nome" +                   // pt-BR, pt-PT
+      "|Имя" +                    // ru
+      "|이름",                    // ko-KR
+      "i"
+    ),
+    "family-name": new RegExp(
+      "last.*name|lname|surname|last$|secondname|family.*name" +
+      "|nachname" +                           // de-DE
+      "|apellido" +                           // es
+      "|famille|^nom" +                       // fr-FR
+      "|cognome" +                            // it-IT
+      "|姓" +                                 // ja-JP
+      "|morada|apelidos|surename|sobrenome" + // pt-BR, pt-PT
+      "|Фамилия" +                            // ru
+      "|\\b성(?:[^명]|\\b)",                  // ko-KR
+      "i"
+    ),
     "organization": new RegExp(
       "company|busmness|organization|organisation" +
       "|firma|firmenname" +   // de-DE
@@ -104,6 +132,39 @@ this.FormAutofillHeuristics = {
     ),
   },
 
+  getFormInfo(form) {
+    let fieldDetails = [];
+    for (let element of form.elements) {
+      // Exclude elements to which no autocomplete field has been assigned.
+      let info = this.getInfo(element);
+      if (!info) {
+        continue;
+      }
+
+      // Store the association between the field metadata and the element.
+      if (fieldDetails.some(f => f.section == info.section &&
+                                 f.addressType == info.addressType &&
+                                 f.contactType == info.contactType &&
+                                 f.fieldName == info.fieldName)) {
+        // A field with the same identifier already exists.
+        log.debug("Not collecting a field matching another with the same info:", info);
+        continue;
+      }
+
+      let formatWithElement = {
+        section: info.section,
+        addressType: info.addressType,
+        contactType: info.contactType,
+        fieldName: info.fieldName,
+        element, // TODO: Apply Cu.getWeakReference and use get API for strong ref.
+      };
+
+      fieldDetails.push(formatWithElement);
+    }
+
+    return fieldDetails;
+  },
+
   getInfo(element) {
     if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
       return null;
@@ -115,18 +176,22 @@ this.FormAutofillHeuristics = {
       return info;
     }
 
-    let label = FormAutofillUtils.findLabelElement(element);
-    if (!label) {
+    let labels = FormAutofillUtils.findLabelElements(element);
+    if (!labels || labels.length == 0) {
+      log.debug("No label found for", element);
       return null;
     }
     for (let fieldName in this.VALID_LABELS) {
-      if (this.VALID_LABELS[fieldName].test(label.textContent)) {
-        return {
-          fieldName,
-          section: null,
-          addressType: null,
-          contactType: null,
-        };
+      for (let label of labels) {
+        if (this.VALID_LABELS[fieldName].test(label.textContent)) {
+          log.debug("found fieldName", fieldName);
+          return {
+            fieldName,
+            section: "",
+            addressType: "",
+            contactType: "",
+          };
+        }
       }
     }
 

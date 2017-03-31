@@ -63,6 +63,8 @@ const SCHEMA_VERSION = 1;
 
 // Name-related fields will be handled in follow-up bugs due to the complexity.
 const VALID_FIELDS = [
+  "given-name",
+  "family-name",
   "organization",
   "street-address",
   "address-level2",
@@ -74,16 +76,24 @@ const VALID_FIELDS = [
 ];
 
 // TODO: Remove this once we can add profile from preference.
-const MOCK_MODE = false;
+const MOCK_MODE = true;
 const MOCK_STORAGE = [{
+  "given-name": "Elmo",
+  "family-name": "Monster",
   guid: "test-guid-1",
   organization: "Sesame Street",
   "street-address": "123 Sesame Street.",
+  email: "elmo@sesamest.com",
+  "postal-code": "3345678",
   tel: "1-345-345-3456",
 }, {
+  "given-name": "Firefox",
+  "family-name": "Gecko",
   guid: "test-guid-2",
   organization: "Mozilla",
   "street-address": "331 E. Evelyn Avenue",
+  email: "firefox@mozilla.com",
+  "postal-code": "332211",
   tel: "1-650-903-0800",
 }];
 
