@@ -7,10 +7,10 @@ runHeuristicsTest([
     fixturePath: "Checkout_ShippingAddress.html",
     expectedResult: [
       [
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // select
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
@@ -33,10 +33,10 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
 */
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // select
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
