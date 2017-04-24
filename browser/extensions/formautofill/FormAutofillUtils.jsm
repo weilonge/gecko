@@ -21,6 +21,47 @@ this.FormAutofillUtils = {
     });
   },
 
+  /**
+   * Extract all strings of an element's children to an array.
+   * "element.textContent" is a string which is merged of all children nodes,
+   * and this function provides an array of the strings contains in an element.
+   *
+   * @param  {Object} element
+   *         A DOM element to be extracted.
+   * @returns {Array}
+   *          All strings in an element.
+   */
+  extractLabelStrings(element) {
+    let strings = [];
+    function _extractLabelStrings(el) {
+      // The tag name list is from Chromium except for "STYLE":
+      // eslint-disable-next-line max-len
+      // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e
+      if (["SCRIPT", "NOSCRIPT", "OPTION", "STYLE"].includes(el.tagName)) {
+        return;
+      }
+
+      if (el.nodeType == Ci.nsIDOMNode.TEXT_NODE ||
+          el.childNodes.length == 0) {
+        let trimmedText = el.textContent.trim();
+        if (trimmedText) {
+          strings.push(trimmedText);
+        }
+        return;
+      }
+
+      for (let node of el.childNodes) {
+        if (node.nodeType != Ci.nsIDOMNode.ELEMENT_NODE &&
+            node.nodeType != Ci.nsIDOMNode.TEXT_NODE) {
+          continue;
+        }
+        _extractLabelStrings(node);
+      }
+    }
+    _extractLabelStrings(element);
+    return strings;
+  },
+
   findLabelElements(element) {
     let document = element.ownerDocument;
     let labels = [];
