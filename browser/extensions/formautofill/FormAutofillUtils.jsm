@@ -34,6 +34,36 @@ this.FormAutofillUtils = {
     return fullName;
   },
 
+
+  /**
+   * Extract all strings of an element's children to an array.
+   * "element.textContent" is a string which is merged of all children nodes,
+   * and this function provides an array of the strings contains in an element.
+   *
+   * @param  {Object} element
+   *         A DOM element to be extracted.
+   * @returns {Array}
+   *          All strings in an element.
+   */
+  extractElementStrings(element) {
+    let strings = [];
+    function iter(ele) {
+      if (ele.childNodes.length == 0) {
+        let trimmedText = ele.textContent.trim();
+        if (trimmedText) {
+          strings.push(trimmedText);
+        }
+        return;
+      }
+
+      for (let i = 0; i < ele.childNodes.length; i++) {
+        iter(ele.childNodes[i]);
+      }
+    }
+    iter(element);
+    return strings;
+  },
+
   findLabelElements(element) {
     let document = element.ownerDocument;
     let labels = [];
