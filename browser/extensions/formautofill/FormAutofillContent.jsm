@@ -444,6 +444,17 @@ var FormAutofillContent = {
     });
   },
 
+  identifyAutofillField(element) {
+    this.log.debug("New Input Element Added");
+    this.log.debug(element);
+    let formLike = FormLikeFactory.createFromField(element);
+    let formHandler = this._formsDetails.get(formLike.rootElement);
+    if (!formHandler) {
+      formHandler = new FormAutofillHandler(formLike);
+    }
+    formHandler.addNewFormFields(element);
+  },
+
   _markAsAutofillField(field) {
     if (!field) {
       return;

@@ -1277,6 +1277,15 @@ HTMLSelectElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // And now make sure our state is up to date
   UpdateState(false);
 
+  if (IsInComposedDoc()) {
+    AsyncEventDispatcher* dispatcher =
+      new AsyncEventDispatcher(this,
+                               NS_LITERAL_STRING("DOMSelectAdded"),
+                               true,
+                               true);
+    dispatcher->PostDOMEvent();
+  }
+
   return rv;
 }
 
