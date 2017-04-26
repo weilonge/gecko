@@ -22,8 +22,12 @@ Cu.import("resource://formautofill/FormAutofillContent.jsm");
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillFrameScript = {
+  isDOMContentLoaded: false,
+
   init() {
     addEventListener("DOMContentLoaded", this);
+    addEventListener("DOMInputTextAdded", this);
+    addEventListener("DOMSelectAdded", this);
     addMessageListener("FormAutofill:PreviewProfile", this);
     addMessageListener("FormAutoComplete:PopupClosed", this);
   },
@@ -44,6 +48,19 @@ var FormAutofillFrameScript = {
           return;
         }
         FormAutofillContent.identifyAutofillFields(doc);
+        this.isDOMContentLoaded = true;
+        break;
+      }
+      case "DOMInputTextAdded": {
+        if (this.isDOMContentLoaded) {
+          FormAutofillContent.identifyAutofillField(evt.target);
+        }
+        break;
+      }
+      case "DOMSelectAdded": {
+        if (this.isDOMContentLoaded) {
+          FormAutofillContent.identifyAutofillField(evt.target);
+        }
         break;
       }
     }

@@ -66,6 +66,11 @@ FormAutofillHandler.prototype = {
     log.debug("Collected details on", this.fieldDetails.length, "fields");
   },
 
+  addNewFormFields(element) {
+    let info = FormAutofillHeuristics.getInfo(element, this.fieldDetails);
+    log.debug(info);
+  },
+
   /**
    * Processes form fields that can be autofilled, and populates them with the
    * profile provided by backend.

@@ -5046,6 +5046,17 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 #endif
   }
 
+  if (mType == NS_FORM_INPUT_TEXT) {
+    if (IsInComposedDoc()) {
+      AsyncEventDispatcher* dispatcher =
+        new AsyncEventDispatcher(this,
+                                 NS_LITERAL_STRING("DOMInputTextAdded"),
+                                 true,
+                                 true);
+      dispatcher->PostDOMEvent();
+    }
+  }
+
   return rv;
 }
 
@@ -5196,6 +5207,15 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
     AsyncEventDispatcher* dispatcher =
       new AsyncEventDispatcher(this,
                                NS_LITERAL_STRING("DOMInputPasswordAdded"),
+                               true,
+                               true);
+    dispatcher->PostDOMEvent();
+  }
+
+  if (mType == NS_FORM_INPUT_TEXT) {
+    AsyncEventDispatcher* dispatcher =
+      new AsyncEventDispatcher(this,
+                               NS_LITERAL_STRING("DOMInputTextAdded"),
                                true,
                                true);
     dispatcher->PostDOMEvent();
