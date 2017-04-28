@@ -42,6 +42,18 @@ this.FormAutofillHeuristics = {
     ],
     TEL: ["tel"],
     EMAIL: ["email"],
+    CREDIT_CARD: [
+      "cc-name",
+      // "cc-given-name",
+      // "cc-additional-name"
+      // "cc-family-name"
+      "cc-number",
+      // "cc-exp",
+      "cc-exp-month",
+      "cc-exp-year",
+      // "cc-csc",
+      // "cc-type",
+    ],
   },
 
   RULES: null,
@@ -148,6 +160,12 @@ this.FormAutofillHeuristics = {
         }
       }
       for (let fieldName of this.FIELD_GROUPS.NAME) {
+        if (this.RULES[fieldName].test(string)) {
+          result.fieldName = fieldName;
+          return result;
+        }
+      }
+      for (let fieldName of this.FIELD_GROUPS.CREDIT_CARD) {
         if (this.RULES[fieldName].test(string)) {
           result.fieldName = fieldName;
           return result;
