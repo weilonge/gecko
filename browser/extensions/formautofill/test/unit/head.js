@@ -84,7 +84,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
   Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
 
   // TODO: "select" and "textarea" will be included eventually.
-  const QUERY_STRING = ["input"];
+  const QUERY_STRING = ["input", "select"];
   patterns.forEach(testPattern => {
     add_task(function* () {
       do_print("Starting test fixture: " + testPattern.fixturePath);

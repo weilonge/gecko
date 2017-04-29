@@ -63,7 +63,7 @@ let FormLikeFactory = {
    * @throws Error if aField isn't a password or username field in a document
    */
   createFromField(aField) {
-    if (!(aField instanceof Ci.nsIDOMHTMLInputElement) ||
+    if ((!(aField instanceof Ci.nsIDOMHTMLInputElement) && !(aField instanceof Ci.nsIDOMHTMLSelectElement)) ||
         !aField.ownerDocument) {
       throw new Error("createFromField requires a field in a document");
     }
