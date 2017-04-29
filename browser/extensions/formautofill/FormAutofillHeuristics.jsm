@@ -87,9 +87,15 @@ this.FormAutofillHeuristics = {
   },
 
   getInfo(element, fieldDetails) {
-    if (!(element instanceof Ci.nsIDOMHTMLInputElement) ||
-        !["text", "email", "tel", "number"].includes(element.type) ||
-        element.autocomplete == "off") {
+    if (element.autocomplete == "off") {
+      return null;
+    }
+
+    if (element instanceof Ci.nsIDOMHTMLInputElement) {
+      if (!["text", "email", "tel", "number"].includes(element.type)) {
+        return null;
+      }
+    } else if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
       return null;
     }
 

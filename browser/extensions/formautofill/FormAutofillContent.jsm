@@ -402,6 +402,13 @@ var FormAutofillContent = {
     this.log.debug("identifyAutofillFields:", "" + doc.location);
     let forms = [];
 
+    function pushNewField(field) {
+      let formLike = FormLikeFactory.createFromField(field);
+      if (!forms.some(form => form.rootElement === formLike.rootElement)) {
+        forms.push(formLike);
+      }
+    }
+
     // Collects root forms from inputs.
     for (let field of doc.getElementsByTagName("input")) {
       // We only consider text-like fields for now until we support radio and
@@ -409,11 +416,11 @@ var FormAutofillContent = {
       if (!field.mozIsTextField(true)) {
         continue;
       }
+      pushNewField(field);
+    }
 
-      let formLike = FormLikeFactory.createFromField(field);
-      if (!forms.some(form => form.rootElement === formLike.rootElement)) {
-        forms.push(formLike);
-      }
+    for (let field of doc.getElementsByTagName("select")) {
+      pushNewField(field);
     }
 
     this.log.debug("Found", forms.length, "forms");
