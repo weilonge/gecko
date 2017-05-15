@@ -347,6 +347,104 @@ class AutofillRecords {
     return result;
   }
 
+  _findCommonFieldsBySchemaVersion(schemaVersion1, schemaVersion2) {
+    let schemaVersion = Math.min(schemaVersion1, schemaVersion2);
+
+    // If the minimal schema version of two migrated records are still greater
+    // than the current version, returning null indicates the valid fields can
+    // not been determined.
+    if (schemaVersion != this.version) {
+      return null;
+    }
+    return this.VALID_FIELDS;
+  }
+
+  _isRawIdentical(record1, record2) {
+    let validFields = this._findCommonFieldsBySchemaVersion(record1.version,
+                                                            record2.version);
+    if (!validFields) {
+      return false;
+    }
+    for (let fieldName of validFields) {
+      if (record1[fieldName] != record2[fieldName]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  _migrate(record) {
+    // There is no any migration process for the first version, so any records
+    // can be treated the record as the same one if its schema version is valid.
+    if (!Number.isInteger(record.version) || record.version < 1) {
+      this.log.warn("Invalid schema version number:", record.version);
+      return null;
+    }
+    return record;
+  }
+
+  _mergeRawRecords(baseRecord, preferedRecord) {
+    let newSchemaRecord, oldSchemaRecord;
+    if (preferedRecord.version < baseRecord.version) {
+      newSchemaRecord = baseRecord;
+      oldSchemaRecord = preferedRecord;
+    } else {
+      newSchemaRecord = preferedRecord;
+      oldSchemaRecord = baseRecord;
+    }
+
+    let mergedRecord = this._clone(newSchemaRecord);
+    mergedRecord.timeCreated = Math.max(newSchemaRecord.timeCreated,
+                                        oldSchemaRecord.timeCreated);
+    mergedRecord.timeLastUsed = Math.max(newSchemaRecord.timeLastUsed,
+                                         oldSchemaRecord.timeLastUsed);
+    mergedRecord.timeLastModified = Math.max(newSchemaRecord.timeLastModified,
+                                             oldSchemaRecord.timeLastModified);
+    if (newSchemaRecord.guid != oldSchemaRecord.guid) {
+      mergedRecord.timesUsed = Math.max(newSchemaRecord.timesUsed,
+                                        oldSchemaRecord.timesUsed);
+    } else {
+      mergedRecord.timesUsed = newSchemaRecord.timesUsed + oldSchemaRecord.timesUsed;
+    }
+    return mergedRecord;
+  }
+
+  /**
+   * Returns the merged result of local record and remote record.
+   *
+   * @param   {Object} localRecord
+   *          The record in local already to be merged.
+   * @param   {Object} remoteRecord
+   *          The record from sync server to be merged.
+   * @returns {Object}
+   *          An object with the merged result. `null` means these two are not
+   *          able to be merged.
+   */
+  prefer(localRecord, remoteRecord) {
+    if (localRecord.deleted && !remoteRecord.deleted) {
+      return remoteRecord;
+    }
+    if (remoteRecord.deleted && !localRecord.deleted) {
+      return localRecord;
+    }
+    if (remoteRecord.deleted && localRecord.deleted) {
+      return null;
+    }
+
+    let migratedLocalRecord = this._migrate(localRecord);
+    let migratedRemoteRecord = this._migrate(remoteRecord);
+
+    if (!migratedLocalRecord || !migratedRemoteRecord) {
+      return null;
+    }
+
+    if (this._isRawIdentical(migratedLocalRecord, migratedRemoteRecord)) {
+      return this._mergeRawRecords(migratedLocalRecord, migratedRemoteRecord);
+    }
+
+    return null;
+  }
+
   _clone(record) {
     return Object.assign({}, record);
   }

@@ -225,6 +225,321 @@ add_task(async function test_update() {
   );
 });
 
+add_task(async function test_findCommonFieldsBySchemaVersion() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+  let addresses = profileStorage.addresses;
+
+  const ITEM_1 = Object.assign({
+    "guid": "DUMMY_1",
+    "version": 1,
+    "timeCreated": 0,
+    "timeLastUsed": 0,
+    "timeLastModified": 0,
+    "timesUsed": 0,
+  }, TEST_ADDRESS_1);
+
+  const ITEM_2 = Object.assign({
+    "guid": "DUMMY_2",
+    "version": 6000,
+    "newUnknownField": "test new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses.VALID_FIELDS,
+                   addresses._findCommonFieldsBySchemaVersion(ITEM_1.version,
+                                                              ITEM_2.version));
+
+  const ITEM_3 = Object.assign({
+    "guid": "DUMMY_3",
+    "version": 6001,
+    "newUnknownField": "test new field",
+    "anotherNewUnknownField": "test another new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.equal(null, addresses._findCommonFieldsBySchemaVersion(ITEM_2.version,
+                                                                ITEM_3.version));
+});
+
+add_task(async function test_isRawIdentical() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  const ITEM_1 = Object.assign({
+    "guid": "DUMMY_1",
+    "version": 1,
+    "timeCreated": 0,
+    "timeLastUsed": 0,
+    "timeLastModified": 0,
+    "timesUsed": 0,
+  }, TEST_ADDRESS_1);
+
+  const ITEM_2 = Object.assign({
+    "guid": "DUMMY_2",
+    "version": 1,
+    "timeCreated": 50,
+    "timeLastUsed": 60,
+    "timeLastModified": 70,
+    "timesUsed": 80,
+  }, TEST_ADDRESS_1);
+
+  Assert.equal(profileStorage.addresses._isRawIdentical(ITEM_1, ITEM_2), true);
+
+  const ITEM_2_modified_familyName = Object.assign({}, ITEM_2, {
+    "family-name": "DUMMY",
+  });
+
+  Assert.equal(profileStorage.addresses._isRawIdentical(ITEM_1, ITEM_2_modified_familyName), false);
+
+  const ITEM_3 = Object.assign({
+    "guid": "DUMMY_3",
+    "version": 6000,
+    "newUnknownField": "test new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.equal(profileStorage.addresses._isRawIdentical(ITEM_1, ITEM_3), true);
+
+  const ITEM_4 = Object.assign({
+    "guid": "DUMMY_4",
+    "version": 6001,
+    "newUnknownField": "test new field",
+    "anotherNewUnknownField": "test another new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.equal(profileStorage.addresses._isRawIdentical(ITEM_3, ITEM_4), false);
+});
+
+add_task(async function test_migrate() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+  let addresses = profileStorage.addresses;
+
+  const ITEM_1 = Object.assign({
+    "guid": "DUMMY_1",
+    "version": 1,
+    "timeCreated": 0,
+    "timeLastUsed": 0,
+    "timeLastModified": 0,
+    "timesUsed": 0,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._migrate(ITEM_1), ITEM_1);
+
+  const ITEM_2 = Object.assign({
+    "guid": "DUMMY_2",
+    "version": 6000,
+    "newUnknownField": "test new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._migrate(ITEM_2), ITEM_2);
+
+  const ITEM_3 = Object.assign({
+    "guid": "DUMMY_3",
+    "version": "BAD version",
+    "newUnknownField": "test new field",
+    "anotherNewUnknownField": "test another new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._migrate(ITEM_3), null);
+
+  const ITEM_4 = Object.assign({
+    "guid": "DUMMY_4",
+    "version": 0,
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._migrate(ITEM_4), null);
+});
+
+add_task(async function test_mergeRawRecords() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+  let addresses = profileStorage.addresses;
+
+  const ITEM_1 = Object.assign({
+    "guid": "DUMMY_1",
+    "version": 1,
+    "timeCreated": 50,
+    "timeLastUsed": 60,
+    "timeLastModified": 70,
+    "timesUsed": 1000,
+  }, TEST_ADDRESS_1);
+
+  const ITEM_2 = Object.assign({
+    "guid": "DUMMY_2",
+    "version": 6000,
+    "newUnknownField": "test new field",
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._mergeRawRecords(ITEM_1, ITEM_2),
+                   Object.assign({}, ITEM_2, {
+                     "timeCreated": 5000,
+                     "timeLastUsed": 6000,
+                     "timeLastModified": 7000,
+                     "timesUsed": 1000,
+                   }));
+
+  const ITEM_3 = Object.assign({
+    "guid": "DUMMY_3",
+    "version": 1,
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._mergeRawRecords(ITEM_1, ITEM_3),
+                   Object.assign({}, ITEM_3, {
+                     "timeCreated": 5000,
+                     "timeLastUsed": 6000,
+                     "timeLastModified": 7000,
+                     "timesUsed": 1000,
+                   }));
+
+  const ITEM_4 = Object.assign({
+    "guid": "DUMMY_1",
+    "version": 1,
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 10,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(addresses._mergeRawRecords(ITEM_1, ITEM_4),
+                   Object.assign({}, ITEM_4, {
+                     "timeCreated": 5000,
+                     "timeLastUsed": 6000,
+                     "timeLastModified": 7000,
+                     "timesUsed": 1010,
+                   }));
+});
+
+add_task(async function test_prefer() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  const ITEM_1 = Object.assign({
+    "guid": "DUMMY_1",
+    "version": 1,
+    "timeCreated": 5000,
+    "timeLastUsed": 6000,
+    "timeLastModified": 7000,
+    "timesUsed": 8000,
+  }, TEST_ADDRESS_1, {
+    "given-name": "foo",
+  });
+
+  const ITEM_2 = Object.assign({
+    "guid": "DUMMY_2",
+    "version": 6000,
+    "newUnknownField": "test new field",
+    "timeCreated": 0,
+    "timeLastUsed": 0,
+    "timeLastModified": 0,
+    "timesUsed": 0,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(profileStorage.addresses.prefer(ITEM_1, ITEM_2), null);
+
+  const ITEM_3 = Object.assign({
+    "guid": "DUMMY_3",
+    "version": 1,
+    "timeCreated": 0,
+    "timeLastUsed": 0,
+    "timeLastModified": 0,
+    "timesUsed": 0,
+  }, TEST_ADDRESS_1, {
+    "given-name": "another foo",
+  });
+
+  Assert.deepEqual(profileStorage.addresses.prefer(ITEM_1, ITEM_3), null);
+
+  const ITEM_4 = Object.assign({
+    "guid": "DUMMY_4",
+    "version": 1,
+    "timeCreated": 2000,
+    "timeLastUsed": 3000,
+    "timeLastModified": 4000,
+    "timesUsed": 5000,
+  }, TEST_ADDRESS_1, {
+    "given-name": "foo",
+  });
+
+  Assert.deepEqual(profileStorage.addresses.prefer(ITEM_1, ITEM_4),
+                   Object.assign({}, ITEM_4, {
+                     "timeCreated": 5000,
+                     "timeLastUsed": 6000,
+                     "timeLastModified": 7000,
+                     "timesUsed": 8000,
+                   }));
+
+  const ITEM_5 = Object.assign({
+    "guid": "DUMMY_5",
+    "version": 6001,
+    "newUnknownField": "test new field",
+    "anotherNewUnknownField": "test another new field",
+    "timeCreated": 0,
+    "timeLastUsed": 0,
+    "timeLastModified": 0,
+    "timesUsed": 0,
+  }, TEST_ADDRESS_1);
+
+  Assert.deepEqual(profileStorage.addresses.prefer(ITEM_2, ITEM_5), null);
+
+  Assert.deepEqual(profileStorage.addresses.prefer({
+    guid: "DUMMY_1",
+    deleted: true,
+  }, ITEM_1), ITEM_1);
+
+  Assert.deepEqual(profileStorage.addresses.prefer(ITEM_1, {
+    guid: "DUMMY_1",
+    deleted: true,
+  }), ITEM_1);
+
+  Assert.deepEqual(profileStorage.addresses.prefer({
+    guid: "DUMMY_1",
+    deleted: true,
+  }, {
+    guid: "DUMMY_1000",
+    deleted: true,
+  }), null);
+});
+
 add_task(async function test_notifyUsed() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
   await prepareTestRecords(path);
