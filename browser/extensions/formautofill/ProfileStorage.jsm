@@ -104,11 +104,25 @@ ProfileStorage.prototype = {
    * @rejects  JavaScript exception.
    */
   initialize() {
+/*
     this._store = new JSONFile({
       path: this._path,
       dataPostProcessor: this._dataPostProcessor.bind(this),
     });
     return this._store.load();
+*/
+    this._store = {
+      data: {
+        addresses: [],
+      },
+      ensureDataReady: function () {},
+      saveSoon: function () {},
+      _save: function () {},
+    };
+    this._dataPostProcessor({
+      addresses: [],
+    });
+    return Promise.resolve();
   },
 
   /**
