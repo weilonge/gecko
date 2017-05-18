@@ -57,7 +57,10 @@ function FormAutofillParent() {
     profileStorage.initialize().then(function onStorageInitialized() {
       // Update the saved field names to compute the status and update child processes.
       this._updateSavedFieldNames();
+      log.debug("VVVVVV: " + "updateSavedFieldNames done.");
     }.bind(this));
+
+    log.debug("VVVVVV: " + "return profileStorage.");
 
     return profileStorage;
   });
@@ -175,6 +178,7 @@ FormAutofillParent.prototype = {
   receiveMessage({name, data, target}) {
     switch (name) {
       case "FormAutofill:InitParent": {
+        log.debug("A");
         this.profileStorage.initialize();
         break;
       }
@@ -184,13 +188,16 @@ FormAutofillParent.prototype = {
       }
       case "FormAutofill:SaveAddress": {
         if (data.guid) {
+        log.debug("B");
           this.profileStorage.addresses.update(data.guid, data.address);
         } else {
+        log.debug("C");
           this.profileStorage.addresses.add(data.address);
         }
         break;
       }
       case "FormAutofill:RemoveAddresses": {
+        log.debug("D");
         data.guids.forEach(guid => this.profileStorage.addresses.remove(guid));
         break;
       }
@@ -203,6 +210,7 @@ FormAutofillParent.prototype = {
    * @private
    */
   _uninit() {
+    log.debug("E");
     this.profileStorage._saveImmediately();
 
     Services.ppmm.removeMessageListener("FormAutofill:InitParent", this);
@@ -229,8 +237,10 @@ FormAutofillParent.prototype = {
     let addresses = [];
 
     if (info && info.fieldName) {
+    log.debug("F");
       addresses = this.profileStorage.addresses.getByFilter({searchString, info});
     } else {
+    log.debug("G");
       addresses = this.profileStorage.addresses.getAll();
     }
 
@@ -245,6 +255,7 @@ FormAutofillParent.prototype = {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
     }
 
+    log.debug("H");
     this.profileStorage.addresses.getAll().forEach((address) => {
       Object.keys(address).forEach((fieldName) => {
         if (!address[fieldName]) {
@@ -255,6 +266,7 @@ FormAutofillParent.prototype = {
     });
 
     // Remove the internal guid and metadata fields.
+    log.debug("I");
     this.profileStorage.INTERNAL_FIELDS.forEach((fieldName) => {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.delete(fieldName);
     });

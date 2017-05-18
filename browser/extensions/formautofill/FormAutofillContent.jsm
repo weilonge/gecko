@@ -93,7 +93,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
     this.forceStop = false;
     let info = FormAutofillContent.getInputDetails(focusedInput);
 
-    if (!FormAutofillContent.savedFieldNames.has(info.fieldName) ||
+    let matchSavedFieldName = FormAutofillContent.savedFieldNames && FormAutofillContent.savedFieldNames.has(info.fieldName);
+    if (!matchSavedFieldName ||
         FormAutofillContent.getFormHandler(focusedInput).filledProfileGUID) {
       let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
                           .createInstance(Ci.nsIAutoCompleteSearch);
@@ -305,7 +306,9 @@ var FormAutofillContent = {
     Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
     Services.obs.addObserver(this, "earlyformsubmit");
 
-    if (Services.cpmm.initialProcessData.autofillEnabled) {
+    //if (Services.cpmm.initialProcessData.autofillEnabled) {
+    const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
+    if (Services.prefs.getBoolPref(ENABLED_PREF)) {
       ProfileAutocomplete.ensureRegistered();
     }
 
