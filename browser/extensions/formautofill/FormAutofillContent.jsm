@@ -310,7 +310,7 @@ var FormAutofillContent = {
     }
 
     this.savedFieldNames =
-      Services.cpmm.initialProcessData.autofillSavedFieldNames || new Set();
+      Services.cpmm.initialProcessData.autofillSavedFieldNames;
   },
 
   _onFormSubmit(handler) {
@@ -400,6 +400,12 @@ var FormAutofillContent = {
 
   identifyAutofillFields(doc) {
     this.log.debug("identifyAutofillFields:", "" + doc.location);
+
+    if (!this.savedFieldNames) {
+      this.log.debug("identifyAutofillFields: savedFieldNames are not known yet");
+      Services.cpmm.sendAsyncMessage("FormAutofill:InitParent");
+    }
+
     let forms = [];
 
     // Collects root forms from inputs.
