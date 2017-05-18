@@ -83,6 +83,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Timer.jsm"); /* globals setTimeout, clearTimeout */
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
@@ -547,6 +548,7 @@ function ProfileStorage(path) {
   this._path = path;
   this._initializePromise = null;
   this.INTERNAL_FIELDS = INTERNAL_FIELDS;
+  FormAutofillUtils.defineLazyLogGetter(this, "[[ProfileStorage]]:");
 }
 
 ProfileStorage.prototype = {
@@ -578,12 +580,21 @@ ProfileStorage.prototype = {
    * @rejects  JavaScript exception.
    */
   initialize() {
+    this.log.debug("initializing....");
     if (!this._initializePromise) {
       this._store = new JSONFile({
         path: this._path,
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
-      this._initializePromise = this._store.load();
+      //this._initializePromise = this._store.load();
+      this._initializePromise = new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 5000);
+      }).then(() => {
+        this.log.debug("setTimeout done.");
+        return this._store.load();
+      });
     }
     return this._initializePromise;
   },
