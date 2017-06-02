@@ -52,6 +52,31 @@ this.FormAutofillUtils = {
     return categories;
   },
 
+  isInputForSearch(element) {
+    if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
+      return false;
+    }
+
+    if (element.type == "search") {
+      return true;
+    }
+
+    function _check(str) {
+      return str.toLowerCase().includes("search");
+    }
+
+    if (_check(element.id) || _check(element.name) || _check(element.className)) {
+      return true;
+    }
+
+    let form = element.form;
+    if (form && (_check(form.id) || _check(form.action) || _check(form.className))) {
+      return true;
+    }
+
+    return false;
+  },
+
   defineLazyLogGetter(scope, logPrefix) {
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
       let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;

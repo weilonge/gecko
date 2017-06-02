@@ -43,6 +43,12 @@ var FormAutofillFrameScript = {
         let element = evt.target;
         let doc = element.ownerDocument;
 
+        if (element && element.form && element.form.length < 3) {
+          return;
+        }
+        if (FormAutofillUtils.isInputForSearch(element)) {
+          return;
+        }
         if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
           return;
         }
