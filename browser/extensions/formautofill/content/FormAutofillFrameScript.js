@@ -46,9 +46,9 @@ var FormAutofillFrameScript = {
         if (element && element.form && element.form.length < 3) {
           return;
         }
-        if (FormAutofillUtils.isInputForSearch(element)) {
-          return;
-        }
+        //if (FormAutofillUtils.isInputForSearch(element)) {
+        //  return;
+        //}
         if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
           return;
         }
