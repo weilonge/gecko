@@ -49,37 +49,103 @@ this.FormAutofillHeuristics = {
 
   RULES: null,
 
+  _matchTelGrammar(fieldDetails, start, end) {
+    dump("[" + start + " " + end + " " + fieldDetails.length + "]\n");
+
+    if ((end - start + 1) == 4) {
+      fieldDetails[start].fieldName = "tel-area-code";
+      fieldDetails[start + 1].fieldName = "tel-local-prefix";
+      fieldDetails[start + 2].fieldName = "tel-local-suffix";
+      fieldDetails[start + 3].fieldName = "tel-extension";
+    } else if ((end - start + 1) == 2) {
+      fieldDetails[start].fieldName = "tel";
+      fieldDetails[start + 1].fieldName = "tel-extension";
+    }
+  },
+
+  _parseTelFields(elements, cursor, fieldDetails) {
+    let indexNotTel;
+    let detailBegin = fieldDetails.length - 1;
+    let detailEnd = detailBegin;
+    for (let i = cursor + 1; i < elements.length; i++) {
+      let element = elements[i];
+      let info = this.getInfo(element, fieldDetails);
+      if (!info) {
+        break;
+      }
+      fieldDetails.push({
+        section: info.section,
+        addressType: info.addressType,
+        contactType: info.contactType,
+        fieldName: info.fieldName,
+        elementWeakRef: Cu.getWeakReference(element),
+      });
+      if (info.fieldName == "tel") {
+        detailEnd++;
+        continue;
+      } else {
+        indexNotTel = i;
+        break;
+      }
+    }
+
+    // Dedup the same tel fields between [cursor, indexNotTel)
+    // Match to grammar list here.
+    this._matchTelGrammar(fieldDetails, detailBegin, detailEnd);
+    return indexNotTel;
+  },
+
   getFormInfo(form) {
     let fieldDetails = [];
     if (form.autocomplete == "off") {
       return [];
     }
-    for (let element of form.elements) {
+    dump("#elements " + form.elements.length + "\n");
+    for (let i = 0; i < form.elements.length; i++) {
+      let element = form.elements[i];
+      // FIXME there is a potential performance issue here.
+      //if(fieldDetails.some(f => {f.elementWeakRef.get() == element})) {
+      //  dump("found " + i);
+      //  continue;
+      //}
+
       // Exclude elements to which no autocomplete field has been assigned.
       let info = this.getInfo(element, fieldDetails);
       if (!info) {
         continue;
       }
 
-      // Store the association between the field metadata and the element.
-      if (fieldDetails.some(f => f.section == info.section &&
-                                 f.addressType == info.addressType &&
-                                 f.contactType == info.contactType &&
-                                 f.fieldName == info.fieldName)) {
-        // A field with the same identifier already exists.
-        log.debug("Not collecting a field matching another with the same info:", info);
-        continue;
+      if (info.fieldName == "tel") {
+        // Push the current info to fieldDetails
+        fieldDetails.push({
+          section: info.section,
+          addressType: info.addressType,
+          contactType: info.contactType,
+          fieldName: info.fieldName,
+          elementWeakRef: Cu.getWeakReference(element),
+        });
+        dump("enter to _parseTelFields " + i + "\n");
+        let indexNotTel = this._parseTelFields(form.elements, i, fieldDetails);
+        i = indexNotTel;
+      } else {
+        // Store the association between the field metadata and the element.
+        if (fieldDetails.some(f => f.section == info.section &&
+                                   f.addressType == info.addressType &&
+                                   f.contactType == info.contactType &&
+                                   f.fieldName == info.fieldName)) {
+          // A field with the same identifier already exists.
+          log.debug("Not collecting a field matching another with the same info:", info);
+          continue;
+        }
+
+        fieldDetails.push({
+          section: info.section,
+          addressType: info.addressType,
+          contactType: info.contactType,
+          fieldName: info.fieldName,
+          elementWeakRef: Cu.getWeakReference(element),
+        });
       }
-
-      let formatWithElement = {
-        section: info.section,
-        addressType: info.addressType,
-        contactType: info.contactType,
-        fieldName: info.fieldName,
-        elementWeakRef: Cu.getWeakReference(element),
-      };
-
-      fieldDetails.push(formatWithElement);
     }
 
     return fieldDetails;
