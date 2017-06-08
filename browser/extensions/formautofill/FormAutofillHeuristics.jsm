@@ -51,16 +51,50 @@ this.FormAutofillHeuristics = {
 
   _matchTelGrammar(fieldDetails, start, end) {
     dump("[" + start + " " + end + " " + fieldDetails.length + "]\n");
+    const GRAMMARS = this.PHONE_FIELD_GRAMMARS;
 
-    if ((end - start + 1) == 4) {
-      fieldDetails[start].fieldName = "tel-area-code";
-      fieldDetails[start + 1].fieldName = "tel-local-prefix";
-      fieldDetails[start + 2].fieldName = "tel-local-suffix";
-      fieldDetails[start + 3].fieldName = "tel-extension";
-    } else if ((end - start + 1) == 2) {
-      fieldDetails[start].fieldName = "tel";
-      fieldDetails[start + 1].fieldName = "tel-extension";
+    for (let i = 0;  i < GRAMMARS.length; i++) {
+      // Reset the cursor of fieldDetails to the begin.
+      let cursor = start;
+
+      let ruleStart = i;
+      for (; i < GRAMMARS.length && GRAMMARS[i][0]; i++, cursor++) {
+        if (!fieldDetails[cursor]) {
+          break;
+        }
+        let element = fieldDetails[cursor].elementWeakRef.get();
+        dump(fieldDetails[cursor].elementWeakRef.get());
+        dump("\n element: " + element.maxLength + " " + fieldDetails[cursor].fieldName + "\n");
+        if (GRAMMARS[i][0] != fieldDetails[cursor].fieldName) {
+          break;
+        }
+        if (GRAMMARS[i][2] && (!element.maxLength || GRAMMARS[i][2] < element.maxLength)) {
+          break;
+        }
+      }
+      if (i >= GRAMMARS.length) {
+        return;
+      }
+
+      if (!GRAMMARS[i][0]) {
+        dump("Found rules at " + i + " to " + (i - ruleStart) + "\n");
+        let detailCursor = start;
+        for (let j = ruleStart; j < i; j++, detailCursor++) {
+          let rule = GRAMMARS[j];
+          dump(rule + "\n");
+          fieldDetails[detailCursor].fieldName = rule[1];
+        }
+        return;
+      }
+
+      // Fast rewinding to the next rule."
+      for (; i < GRAMMARS.length; i++) {
+        if (!GRAMMARS[i][0]) {
+          break;
+        }
+      }
     }
+
   },
 
   _parseTelFields(elements, cursor, fieldDetails) {
@@ -258,8 +292,8 @@ this.FormAutofillHeuristics = {
 
     return null;
   },
-/*
-  PHONE_FIELD_GRAMMARS = [
+
+  PHONE_FIELD_GRAMMARS: [
     // Country code: <cc> Area Code: <ac> Phone: <phone> (- <suffix>
 
     // (Ext: <ext>)?)?
@@ -282,11 +316,11 @@ this.FormAutofillHeuristics = {
       // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc>:3 <ac>:3 <phone>:3 <suffix>:4 (Ext: <ext>)?
-    {REGEX_PHONE, FIELD_COUNTRY_CODE, 3},
-    {REGEX_PHONE, FIELD_AREA_CODE, 3},
-    {REGEX_PHONE, FIELD_PHONE, 3},
-    {REGEX_PHONE, FIELD_SUFFIX, 4},
-    {REGEX_SEPARATOR, FIELD_NONE, 0},
+    ["tel", "tel-country-code", 3],
+    ["tel", "tel-area-code", 3],
+    ["tel", "tel-local-prefix", 3],
+    ["tel", "tel-local-suffix", 4],
+    [null, null, 0],
 
     // Area Code: <ac> Phone: <phone> (- <suffix> (Ext: <ext>)?)?
       // {REGEX_AREA, FIELD_AREA_CODE, 0},
@@ -294,10 +328,10 @@ this.FormAutofillHeuristics = {
       // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <ac> <phone>:3 <suffix>:4 (Ext: <ext>)?
-    {REGEX_PHONE, FIELD_AREA_CODE, 0},
-    {REGEX_PHONE, FIELD_PHONE, 3},
-    {REGEX_PHONE, FIELD_SUFFIX, 4},
-    {REGEX_SEPARATOR, FIELD_NONE, 0},
+    ["tel", "tel-area-code", 0],
+    ["tel", "tel-local-prefix", 3],
+    ["tel", "tel-local-suffix", 4],
+    [null, null, 0],
 
     // Phone: <cc> \( <ac> \) <phone> (- <suffix> (Ext: <ext>)?)?
       // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
@@ -360,7 +394,6 @@ this.FormAutofillHeuristics = {
       // {REGEX_PHONE, FIELD_PHONE, 0},
       // {REGEX_SEPARATOR, FIELD_NONE, 0},
   ],
-*/
 };
 
 XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "RULES", () => {
