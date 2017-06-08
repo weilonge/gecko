@@ -43,11 +43,41 @@ this.FormAutofillHeuristics = {
       "postal-code",
       "country",
     ],
-    TEL: ["tel"],
+    TEL: [
+      "tel-extension",
+      "tel",
+    ],
     EMAIL: ["email"],
   },
 
   RULES: null,
+
+  _parseAndFillWithRegexp(fieldDetail, fieldName) {
+    let element = fieldDetail.elementWeakRef.get();
+
+    for (let elementString of [element.id, element.name]) {
+      if (this.RULES[fieldName].test(elementString)) {
+        fieldDetail.fieldName = fieldName;
+        return;
+      }
+    }
+
+    let labels = FormAutofillUtils.findLabelElements(element);
+    if (!labels || labels.length == 0) {
+      log.debug("No label found for", element);
+    } else {
+      for (let label of labels) {
+        let strings = FormAutofillUtils.extractLabelStrings(label);
+        dump(strings + "\n");
+        for (let string of strings) {
+          if (this.RULES[fieldName].test(string)) {
+            fieldDetail.fieldName = fieldName;
+            return;
+          }
+        }
+      }
+    }
+  },
 
   _matchTelGrammar(fieldDetails, start, end) {
     dump("[" + start + " " + end + " " + fieldDetails.length + "]\n");
@@ -83,6 +113,13 @@ this.FormAutofillHeuristics = {
           let rule = GRAMMARS[j];
           dump(rule + "\n");
           fieldDetails[detailCursor].fieldName = rule[1];
+        }
+        dump("END: " + detailCursor + " " + end + "\n");
+        if (detailCursor <= end) {
+          // Some fields are not matched to a rule yet, so let's see if it's
+          // a tel-extension field.
+          this._parseAndFillWithRegexp(fieldDetails[detailCursor],
+                                       "tel-extension");
         }
         return;
       }
@@ -209,9 +246,11 @@ this.FormAutofillHeuristics = {
       result.fieldName = "email";
       return result;
     }
-    if (this.RULES.tel.test(string)) {
-      result.fieldName = "tel";
-      return result;
+    for (let fieldName of this.FIELD_GROUPS.TEL) {
+      if (this.RULES[fieldName].test(string)) {
+        result.fieldName = fieldName;
+        return result;
+      }
     }
     for (let fieldName of this.FIELD_GROUPS.ADDRESS) {
       if (this.RULES[fieldName].test(string)) {

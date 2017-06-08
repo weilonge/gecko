@@ -41,6 +41,11 @@ var HeuristicsRegExp = {
       "|(?:전화|핸드폰|휴대폰|휴대전화)(?:.?번호)?", // ko-KR
       "iu"
     ),
+    "tel-extension": new RegExp(
+      "\\bext|ext\\b|extension" +
+      "|ramal",                     // pt-BR, pt-PT
+      "iu"
+    ),
 
     // ==== Address Fields ====
     "organization": new RegExp(

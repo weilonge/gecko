@@ -33,6 +33,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"}, // city
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"}, // FIXME: ZIP ext
       ],
       [
  /* TODO: Credit Card
