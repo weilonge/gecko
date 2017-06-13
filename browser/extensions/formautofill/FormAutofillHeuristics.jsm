@@ -103,25 +103,15 @@ this.FormAutofillHeuristics = {
         }
       }
       if (i >= GRAMMARS.length) {
-        return;
+        return null;
       }
 
       if (!GRAMMARS[i][0]) {
-        dump("Found rules at " + i + " to " + (i - ruleStart) + "\n");
-        let detailCursor = start;
-        for (let j = ruleStart; j < i; j++, detailCursor++) {
-          let rule = GRAMMARS[j];
-          dump(rule + "\n");
-          fieldDetails[detailCursor].fieldName = rule[1];
-        }
-        dump("END: " + detailCursor + " " + end + "\n");
-        if (detailCursor <= end) {
-          // Some fields are not matched to a rule yet, so let's see if it's
-          // a tel-extension field.
-          this._parseAndFillWithRegexp(fieldDetails[detailCursor],
-                                       "tel-extension");
-        }
-        return;
+        dump("Found rules at " + ruleStart + " to " + i + "\n");
+        return {
+          ruleFrom: ruleStart,
+          ruleTo: i,
+        };
       }
 
       // Fast rewinding to the next rule."
@@ -132,10 +122,11 @@ this.FormAutofillHeuristics = {
       }
     }
 
+    return null;
   },
 
   _parseTelFields(elements, cursor, fieldDetails) {
-    let indexNotTel;
+    let indexOfNonTel;
     let detailBegin = fieldDetails.length - 1;
     let detailEnd = detailBegin;
     for (let i = cursor + 1; i < elements.length; i++) {
@@ -155,15 +146,34 @@ this.FormAutofillHeuristics = {
         detailEnd++;
         continue;
       } else {
-        indexNotTel = i;
+        indexOfNonTel = i;
         break;
       }
     }
 
-    // Dedup the same tel fields between [cursor, indexNotTel)
+    // Dedup the same tel fields between [cursor, indexOfNonTel)
     // Match to grammar list here.
-    this._matchTelGrammar(fieldDetails, detailBegin, detailEnd);
-    return indexNotTel;
+    let matchingResult = this._matchTelGrammar(fieldDetails,
+                                               detailBegin,
+                                               detailEnd);
+
+    if (matchingResult) {
+      let {ruleFrom, ruleTo} = matchingResult;
+      let detailCursor = detailBegin;
+      for (let j = ruleFrom; j < ruleTo; j++, detailCursor++) {
+        let rule = this.PHONE_FIELD_GRAMMARS[j];
+        dump(rule + "\n");
+        fieldDetails[detailCursor].fieldName = rule[1];
+      }
+      if (detailCursor <= detailEnd) {
+        // Some fields are not matched to a rule yet, so let's see if it's
+        // a tel-extension field.
+        this._parseAndFillWithRegexp(fieldDetails[detailCursor],
+                                     "tel-extension");
+      }
+    }
+
+    return indexOfNonTel;
   },
 
   getFormInfo(form) {
@@ -196,8 +206,9 @@ this.FormAutofillHeuristics = {
           elementWeakRef: Cu.getWeakReference(element),
         });
         dump("enter to _parseTelFields " + i + "\n");
-        let indexNotTel = this._parseTelFields(form.elements, i, fieldDetails);
-        i = indexNotTel;
+        let indexOfNonTel = this._parseTelFields(form.elements, i, fieldDetails);
+        // Jump to the element which is not a tel field.
+        i = indexOfNonTel;
       } else {
         // Store the association between the field metadata and the element.
         if (fieldDetails.some(f => f.section == info.section &&

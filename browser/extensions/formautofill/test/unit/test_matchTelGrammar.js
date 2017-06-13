@@ -21,13 +21,33 @@ const TESTCASES = [
       genCase("email", 10),
       genCase("tel", 3),
       genCase("tel", 3),
+      genCase("tel", 3),
+      genCase("tel", 4),
+      genCase("email", 10),
+    ],
+    expectedValue: {
+      ruleFrom: 0,
+      ruleTo: 4,
+    },
+    // "email", "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix", "tel", "email",
+  },
+  {
+    start: 2,
+    end: 6,
+    fieldDetails: [
+      genCase("email", 10),
+      genCase("email", 10),
+      genCase("tel", 3),
+      genCase("tel", 3),
       genCase("tel", 4),
       genCase("tel", 4),
       genCase("email", 10),
     ],
-    expectedResult: [
-      "email", "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix", "tel", "email",
-    ],
+    expectedValue: {
+      ruleFrom: 5,
+      ruleTo: 8,
+    },
+    // "email", "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix", "tel", "email",
   },
   {
     start: 0,
@@ -37,9 +57,11 @@ const TESTCASES = [
       genCase("tel", 3),
       genCase("tel", 4),
     ],
-    expectedResult: [
-      "tel-area-code", "tel-local-prefix", "tel-local-suffix",
-    ],
+    expectedValue: {
+      ruleFrom: 5,
+      ruleTo: 8,
+    },
+    // "tel-area-code", "tel-local-prefix", "tel-local-suffix",
   },
   {
     start: 1,
@@ -50,9 +72,11 @@ const TESTCASES = [
       genCase("tel", 3),
       genCase("tel", 4),
     ],
-    expectedResult: [
-      "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix",
-    ],
+    expectedValue: {
+      ruleFrom: 5,
+      ruleTo: 8,
+    },
+    // "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix",
   },
   {
     start: 0,
@@ -63,9 +87,11 @@ const TESTCASES = [
       genCase("tel", 4),
       genCase("email", 10),
     ],
-    expectedResult: [
-      "tel-area-code", "tel-local-prefix", "tel-local-suffix", "email",
-    ],
+    expectedValue: {
+      ruleFrom: 5,
+      ruleTo: 8,
+    },
+    // "tel-area-code", "tel-local-prefix", "tel-local-suffix", "email",
   },
   {
     start: 1,
@@ -77,20 +103,22 @@ const TESTCASES = [
       genCase("tel", 4),
       genCase("email", 10),
     ],
-    expectedResult: [
-      "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix", "email",
-    ],
+    expectedValue: {
+      ruleFrom: 5,
+      ruleTo: 8,
+    },
+    // "email", "tel-area-code", "tel-local-prefix", "tel-local-suffix", "email",
   },
 ];
 
 TESTCASES.forEach(testcase => {
   add_task(function* () {
-    let {fieldDetails, start, end, expectedResult} = testcase;
+    let {fieldDetails, start, end, expectedValue} = testcase;
     do_print("Starting testcase: " + fieldDetails.map(i => i.fieldName));
-    FormAutofillHeuristics._matchTelGrammar(fieldDetails,
-                                            start,
-                                            end);
+    let result = FormAutofillHeuristics._matchTelGrammar(fieldDetails,
+                                                         start,
+                                                         end);
 
-    Assert.deepEqual(fieldDetails.map(i => i.fieldName), expectedResult);
+    Assert.deepEqual(result, expectedValue);
   });
 });
