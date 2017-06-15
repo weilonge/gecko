@@ -55,6 +55,24 @@ this.FormAutofillUtils = {
     return categories;
   },
 
+  getAddressSeparator() {
+    // The separator should be based on the L10N address format, and using a
+    // white space is a temporary solution.
+    return " ";
+  },
+
+  toOneLineAddress(address, delimiter = "\n") {
+    let array = typeof address == "string" ? address.split(delimiter) : address;
+
+    if (!Array.isArray(array)) {
+      return null;
+    }
+    return array
+      .filter(s => s)
+      .map(s => s.trim())
+      .join(this.getAddressSeparator());
+  },
+
   defineLazyLogGetter(scope, logPrefix) {
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
       let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
