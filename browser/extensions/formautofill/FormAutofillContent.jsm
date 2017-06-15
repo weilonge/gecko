@@ -450,8 +450,11 @@ var FormAutofillContent = {
 
     let forms = [];
 
+    let focusedForm = doc.activeElement.form;
+    focusedForm = focusedForm ? focusedForm : doc;
+
     // Collects root forms from inputs.
-    for (let field of FormAutofillUtils.autofillFieldSelector(doc)) {
+    for (let field of FormAutofillUtils.autofillFieldSelector(focusedForm)) {
       if (!FormAutofillUtils.isFieldEligibleForAutofill(field)) {
         continue;
       }
