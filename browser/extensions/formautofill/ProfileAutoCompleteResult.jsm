@@ -93,9 +93,13 @@ ProfileAutoCompleteResult.prototype = {
    * @returns {string} The secondary label
    */
   _getSecondaryLabel(focusedFieldName, allFieldNames, profile) {
-    /* TODO: Since "name" is a special case here, so the secondary "name" label
-       will be refined when the handling rule for "name" is ready.
-    */
+    const possibleStreetAddressFields = [
+      "street-address",
+      "address-line1",
+      "address-line2",
+      "address-line3",
+    ];
+
     const possibleNameFields = [
       "name",
       "given-name",
@@ -103,8 +107,11 @@ ProfileAutoCompleteResult.prototype = {
       "family-name",
     ];
 
-    focusedFieldName = possibleNameFields.includes(focusedFieldName) ?
-                       "name" : focusedFieldName;
+    if (possibleStreetAddressFields.includes(focusedFieldName)) {
+      focusedFieldName = "street-address";
+    } else if (possibleNameFields.includes(focusedFieldName)) {
+      focusedFieldName = "name";
+    }
 
     const secondaryLabelOrder = [
       "street-address",  // Street address
@@ -125,8 +132,14 @@ ProfileAutoCompleteResult.prototype = {
       }
 
       let matching;
-      if (currentFieldName == "name") {
-        matching = allFieldNames.some(fieldName => possibleNameFields.includes(fieldName));
+      if (currentFieldName == "street-address") {
+        matching = allFieldNames.some(
+          fieldName => possibleStreetAddressFields.includes(fieldName)
+        );
+      } else if (currentFieldName == "name") {
+        matching = allFieldNames.some(
+          fieldName => possibleNameFields.includes(fieldName)
+        );
       } else {
         matching = allFieldNames.includes(currentFieldName);
       }
