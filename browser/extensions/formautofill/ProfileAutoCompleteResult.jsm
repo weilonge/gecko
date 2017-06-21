@@ -145,6 +145,10 @@ ProfileAutoCompleteResult.prototype = {
       }
 
       if (matching) {
+        if (currentFieldName == "street-address" &&
+            profile["-moz-street-address-one-line"]) {
+          return profile["-moz-street-address-one-line"];
+        }
         return profile[currentFieldName];
       }
     }
@@ -157,8 +161,13 @@ ProfileAutoCompleteResult.prototype = {
     return profiles.filter(profile => {
       return !!profile[focusedFieldName];
     }).map(profile => {
+      let primaryLabel = profile[focusedFieldName];
+      if (focusedFieldName == "street-address" &&
+          profile["-moz-street-address-one-line"]) {
+        primaryLabel = profile["-moz-street-address-one-line"];
+      }
       return {
-        primary: profile[focusedFieldName],
+        primary: primaryLabel,
         secondary: this._getSecondaryLabel(focusedFieldName,
                                            allFieldNames,
                                            profile),

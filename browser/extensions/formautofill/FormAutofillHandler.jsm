@@ -125,7 +125,12 @@ FormAutofillHandler.prototype = {
 
   _addressTransformer(profile) {
     if (profile["street-address"]) {
-      profile["street-address"] = this._getOneLineStreetAddress(profile["street-address"]);
+      // "-moz-street-address-one-line" is for the label of street-address.
+      profile["-moz-street-address-one-line"] = this._getOneLineStreetAddress(profile["street-address"]);
+      let streetAddressElement = this.getFieldDetailByName("street-address").elementWeakRef.get();
+      if (streetAddressElement instanceof Ci.nsIDOMHTMLInputElement) {
+        profile["street-address"] = profile["-moz-street-address-one-line"];
+      }
 
       let waitForConcat = [];
       for (let f of ["address-line3", "address-line2", "address-line1"]) {
