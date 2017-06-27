@@ -421,12 +421,15 @@ class Addresses extends AutofillRecords {
     // Compute address
     if (profile["street-address"]) {
       let streetAddress = profile["street-address"].split("\n");
-      // TODO: we should prevent the dataloss by concatenating the rest of lines
-      //       with a locale-specific character in the future (bug 1360114).
       for (let i = 0; i < 3; i++) {
         if (streetAddress[i]) {
           profile["address-line" + (i + 1)] = streetAddress[i];
         }
+      }
+      if (streetAddress.length > 3) {
+        profile["address-line3"] = FormAutofillUtils.toOneLineAddress(
+          streetAddress.splice(3).unshift(profile["address-line3"])
+        );
       }
     }
 
