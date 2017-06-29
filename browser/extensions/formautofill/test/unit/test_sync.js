@@ -145,6 +145,7 @@ add_task(async function test_outgoing() {
     // The tracker should have a score recorded for the 2 additions we had.
     equal(engine._tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
+    engine.lastSync = 0;
     engine.sync();
 
     Assert.equal(collection.count(), 2);
@@ -176,7 +177,9 @@ add_task(async function test_incoming_new() {
 
     server.insertWBO("foo", "addresses", new ServerWBO(profileID, encryptPayload({
       id: profileID,
-      entry: TEST_PROFILE_1,
+      entry: Object.assign({
+        version: 1,
+      }, TEST_PROFILE_1),
     }), Date.now() / 1000));
     server.insertWBO("foo", "addresses", new ServerWBO(deletedID, encryptPayload({
       id: deletedID,
@@ -209,11 +212,49 @@ add_task(async function test_incoming_new() {
   }
 });
 
+add_task(async function test_incoming_existing() {
+  let {server, engine} = await setup();
+  try {
+    let guid1 = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid2 = profileStorage.addresses.add(TEST_PROFILE_2);
+
+    // an initial sync so we don't think they are locally modified.
+    engine.lastSync = 0;
+    engine.sync();
+
+    // now server records that modify the existing items.
+    let modifiedEntry1 = Object.assign({}, TEST_PROFILE_1, {
+      "version": 1,
+      "given-name": "NewName",
+    });
+
+    server.insertWBO("foo", "addresses", new ServerWBO(guid1, encryptPayload({
+      id: guid1,
+      entry: modifiedEntry1,
+    }), Date.now() / 1000));
+    server.insertWBO("foo", "addresses", new ServerWBO(guid2, encryptPayload({
+      id: guid2,
+      deleted: true,
+    }), Date.now() / 1000));
+
+    engine.lastSync = 0;
+    engine.sync();
+
+    expectLocalProfiles([
+      Object.assign({}, modifiedEntry1, {guid: guid1}),
+      {guid: guid2, deleted: true},
+    ]);
+  } finally {
+    await cleanup(server);
+  }
+});
+
 add_task(async function test_tombstones() {
   let {server, collection, engine} = await setup();
   try {
     let existingGUID = profileStorage.addresses.add(TEST_PROFILE_1);
 
+    engine.lastSync = 0;
     engine.sync();
 
     Assert.equal(collection.count(), 1);
@@ -222,6 +263,7 @@ add_task(async function test_tombstones() {
     equal(payload.deleted, undefined);
 
     profileStorage.addresses.remove(existingGUID);
+
     engine.sync();
 
     // should still exist, but now be a tombstone.
@@ -229,6 +271,175 @@ add_task(async function test_tombstones() {
     payload = collection.payloads()[0];
     equal(payload.id, existingGUID);
     equal(payload.deleted, true);
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_applyIncoming_both_deleted() {
+  let {server, engine} = await setup();
+  try {
+    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    engine.lastSync = 0;
+    engine.sync();
+
+    // Delete synced record locally.
+    profileStorage.addresses.remove(guid);
+
+    // Delete same record remotely.
+    let collection = server.user("foo").collection("addresses");
+    collection.insert(guid, encryptPayload({
+      id: guid,
+      deleted: true,
+    }), Date.now() / 1000);
+
+    engine.lastSync = 0;
+    engine.sync();
+
+    ok(!profileStorage.addresses.get(guid),
+      "Should not return record for locally deleted item");
+
+    let localRecords = profileStorage.addresses.getAll({
+      includeDeleted: true,
+    });
+    equal(localRecords.length, 1, "Only tombstone should exist locally");
+
+    equal(collection.count(), 1,
+      "Only tombstone should exist on server");
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_applyIncoming_nonexistent_tombstone() {
+  let {server, engine} = await setup();
+  try {
+    let guid = profileStorage.addresses._generateGUID();
+    let collection = server.user("foo").collection("addresses");
+    collection.insert(guid, encryptPayload({
+      id: guid,
+      deleted: true,
+    }), Date.now() / 1000);
+
+    engine.lastSync = 0;
+    engine.sync();
+
+    ok(!profileStorage.addresses.get(guid),
+      "Should not return record for uknown deleted item");
+    let localTombstone = profileStorage.addresses.getAll({
+      includeDeleted: true,
+    }).find(record => record.guid == guid);
+    ok(localTombstone, "Should store tombstone for unknown item");
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_applyIncoming_incoming_deleted() {
+  let {server, engine} = await setup();
+  try {
+    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    engine.lastSync = 0;
+    engine.sync();
+
+    // Delete the record remotely.
+    let collection = server.user("foo").collection("addresses");
+    collection.insert(guid, encryptPayload({
+      id: guid,
+      deleted: true,
+    }), Date.now() / 1000);
+
+    engine.lastSync = 0;
+    engine.sync();
+
+    ok(!profileStorage.addresses.get(guid), "Should delete unmodified item locally");
+
+    let localTombstone = profileStorage.addresses.getAll({
+      includeDeleted: true,
+    }).find(record => record.guid == guid);
+    ok(localTombstone, "Should keep local tombstone for remotely deleted item");
+    strictEqual(profileStorage.addresses._getSyncChangeCounter(guid), 0,
+      "Local tombstone should be marked as syncing");
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_applyIncoming_incoming_restored() {
+  let {server, engine} = await setup();
+  try {
+    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    // Upload the record to the server.
+    engine.lastSync = 0;
+    engine.sync();
+
+    // Removing a synced record should write a tombstone.
+    profileStorage.addresses.remove(guid);
+
+    // Modify the deleted record remotely.
+    let collection = server.user("foo").collection("addresses");
+    let serverPayload = JSON.parse(JSON.parse(collection.payload(guid)).ciphertext);
+    serverPayload.entry["street-address"] = "I moved!";
+    collection.insert(guid, encryptPayload(serverPayload), Date.now() / 1000);
+
+    // Sync again.
+    engine.lastSync = 0;
+    engine.sync();
+
+    // We should replace our tombstone with the server's version.
+    let localRecord = profileStorage.addresses.get(guid);
+    objectMatches(localRecord, {
+      "given-name": "Timothy",
+      "family-name": "Berners-Lee",
+      "street-address": "I moved!",
+    });
+
+    let maybeNewServerPayload = JSON.parse(JSON.parse(collection.payload(guid)).ciphertext);
+    deepEqual(maybeNewServerPayload, serverPayload, "Should not change record on server");
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_applyIncoming_outgoing_restored() {
+  let {server, engine} = await setup();
+  try {
+    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    // Upload the record to the server.
+    engine.lastSync = 0;
+    engine.sync();
+
+    // Modify the local record.
+    let localCopy = Object.assign({}, TEST_PROFILE_1);
+    localCopy["street-address"] = "I moved!";
+    profileStorage.addresses.update(guid, localCopy);
+
+    // Replace the record with a tombstone on the server.
+    let collection = server.user("foo").collection("addresses");
+    collection.insert(guid, encryptPayload({
+      id: guid,
+      deleted: true,
+    }), Date.now() / 1000);
+
+    // Sync again.
+    engine.lastSync = 0;
+    engine.sync();
+
+    // We should resurrect the record on the server.
+    let serverPayload = JSON.parse(JSON.parse(collection.payload(guid)).ciphertext);
+    ok(!serverPayload.deleted, "Should resurrect record on server");
+    objectMatches(serverPayload.entry, {
+      "given-name": "Timothy",
+      "family-name": "Berners-Lee",
+      "street-address": "I moved!",
+    });
+
+    let localRecord = profileStorage.addresses.get(guid);
+    ok(localRecord, "Modified record should not be deleted locally");
   } finally {
     await cleanup(server);
   }
@@ -264,6 +475,7 @@ add_task(async function test_incoming_dupes() {
     // server.
     let guid1 = profileStorage.addresses.add(TEST_PROFILE_1);
 
+    engine.lastSync = 0;
     engine.sync();
 
     // Create another profile locally, but don't sync it yet.
@@ -274,12 +486,16 @@ add_task(async function test_incoming_dupes() {
     let guid1_dupe = Utils.makeGUID();
     server.insertWBO("foo", "addresses", new ServerWBO(guid1_dupe, encryptPayload({
       id: guid1_dupe,
-      entry: TEST_PROFILE_1,
+      entry: Object.assign({
+        version: 1,
+      }, TEST_PROFILE_1),
     }), Date.now() / 1000));
     let guid2_dupe = Utils.makeGUID();
     server.insertWBO("foo", "addresses", new ServerWBO(guid2_dupe, encryptPayload({
       id: guid2_dupe,
-      entry: TEST_PROFILE_2,
+      entry: Object.assign({
+        version: 1,
+      }, TEST_PROFILE_2),
     }), Date.now() / 1000));
 
     // Sync again. We should download `guid1_dupe` and `guid2_dupe`, then
@@ -312,7 +528,9 @@ add_task(async function test_dedupe_identical_unsynced() {
     notEqual(localGuid, remoteGuid);
     server.insertWBO("foo", "addresses", new ServerWBO(remoteGuid, encryptPayload({
       id: remoteGuid,
-      entry: TEST_PROFILE_1,
+      entry: Object.assign({
+        version: 1,
+      }, TEST_PROFILE_1),
     }), Date.now() / 1000));
 
     engine.lastSync = 0;
@@ -335,14 +553,18 @@ add_task(async function test_dedupe_identical_synced() {
   try {
     // create a record locally.
     let localGuid = profileStorage.addresses.add(TEST_PROFILE_1);
+
     // sync it - it will no longer be a candidate for de-duping.
+    engine.lastSync = 0;
     engine.sync();
 
     // and an identical record on the server but different GUID.
     let remoteGuid = Utils.makeGUID();
     server.insertWBO("foo", "addresses", new ServerWBO(remoteGuid, encryptPayload({
       id: remoteGuid,
-      entry: TEST_PROFILE_1,
+      entry: Object.assign({
+        version: 1,
+      }, TEST_PROFILE_1),
     }), Date.now() / 1000));
 
     engine.lastSync = 0;
@@ -419,6 +641,67 @@ add_task(async function test_dedupe_multiple_candidates() {
       "A should be marked as syncing");
     strictEqual(profileStorage.addresses._getSyncChangeCounter(bGuid), 0,
       "B should be marked as syncing");
+  } finally {
+    await cleanup(server);
+  }
+});
+
+// Unlike most sync engines, we want "both modified" to inspect the records,
+// and if materially different, create a duplicate.
+add_task(async function test_reconcile_both_modified_conflict() {
+  let {server, engine} = await setup();
+  try {
+    // create a record locally.
+    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    // Upload the record to the server.
+    engine.lastSync = 0;
+    engine.sync();
+
+    strictEqual(profileStorage.addresses._getSyncChangeCounter(guid), 0,
+      "Original record should be marked as syncing");
+
+    // Change the same field locally and on the server.
+    let localCopy = Object.assign({}, TEST_PROFILE_1);
+    localCopy["street-address"] = "I moved!";
+    profileStorage.addresses.update(guid, localCopy);
+
+    let collection = server.user("foo").collection("addresses");
+    let serverPayload = JSON.parse(JSON.parse(collection.payload(guid)).ciphertext);
+    serverPayload.entry["street-address"] = "I moved, too!";
+    collection.insert(guid, encryptPayload(serverPayload), Date.now() / 1000);
+
+    // Sync again.
+    engine.lastSync = 0;
+    engine.sync();
+
+    // Since we wait to pull changes until we're ready to upload, both records
+    // should now exist on the server; we don't need a follow-up sync.
+    let serverPayloads = collection.payloads();
+    equal(serverPayloads.length, 2, "Both records should exist on server");
+
+    let forkedPayload = serverPayloads.find(payload => payload.id != guid);
+    ok(forkedPayload, "Forked record should exist on server");
+
+    expectLocalProfiles([
+      {
+        guid,
+        "given-name": "Timothy",
+        "family-name": "Berners-Lee",
+        "street-address": "I moved, too!",
+      },
+      {
+        guid: forkedPayload.id,
+        "given-name": "Timothy",
+        "family-name": "Berners-Lee",
+        "street-address": "I moved!",
+      },
+    ]);
+
+    let changeCounter = profileStorage.addresses._getSyncChangeCounter(
+      forkedPayload.id);
+    strictEqual(changeCounter, 0,
+      "Forked record should be marked as syncing");
   } finally {
     await cleanup(server);
   }
