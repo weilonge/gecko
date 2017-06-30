@@ -21,6 +21,61 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 
+class FieldScanner {
+  constructor(elements, fieldDetails = []) {
+    this._elementsWeakRef = Cu.getWeakReference(elements);
+    this._fieldDetails = fieldDetails;
+  }
+
+  get fieldDetails() {
+    return this._fieldDetails;
+  }
+
+  get elements() {
+    return this._elementsWeakRef.get();
+  }
+
+  pushDetail() {
+    let elementIndex = this.fieldDetails.length;
+    if (elementIndex >= this.elements.length) {
+      log.warn("try to push the non-exising element info.");
+      return;
+    }
+    let element = this.elements[elementIndex];
+    let info = FormAutofillHeuristics.getInfo(element);
+    if (!info) {
+      info = {};
+    }
+    let fieldInfo = {
+      section: info.section,
+      addressType: info.addressType,
+      contactType: info.contactType,
+      fieldName: info.fieldName,
+      elementWeakRef: Cu.getWeakReference(element),
+    };
+
+    // Store the association between the field metadata and the element.
+    if (this.hasSameField(info)) {
+      // A field with the same identifier already exists.
+      log.debug("Not collecting a field matching another with the same info:", info);
+      fieldInfo._duplicated = true;
+    }
+
+    this._fieldDetails.push(fieldInfo);
+  }
+
+  hasSameField(info) {
+    return this._fieldDetails.some(f => f.section == info.section &&
+                                   f.addressType == info.addressType &&
+                                   f.contactType == info.contactType &&
+                                   f.fieldName == info.fieldName);
+  }
+
+  get trimmedFieldDetail() {
+    return this._fieldDetails.filter(f => f.fieldName && !f._duplicated);
+  }
+}
+
 /**
  * Returns the autocomplete information of fields according to heuristics.
  */
@@ -50,39 +105,16 @@ this.FormAutofillHeuristics = {
   RULES: null,
 
   getFormInfo(form) {
-    let fieldDetails = [];
     if (form.autocomplete == "off") {
       return [];
     }
-    for (let element of form.elements) {
-      // Exclude elements to which no autocomplete field has been assigned.
-      let info = this.getInfo(element, fieldDetails);
-      if (!info) {
-        continue;
-      }
-
-      // Store the association between the field metadata and the element.
-      if (fieldDetails.some(f => f.section == info.section &&
-                                 f.addressType == info.addressType &&
-                                 f.contactType == info.contactType &&
-                                 f.fieldName == info.fieldName)) {
-        // A field with the same identifier already exists.
-        log.debug("Not collecting a field matching another with the same info:", info);
-        continue;
-      }
-
-      let formatWithElement = {
-        section: info.section,
-        addressType: info.addressType,
-        contactType: info.contactType,
-        fieldName: info.fieldName,
-        elementWeakRef: Cu.getWeakReference(element),
-      };
-
-      fieldDetails.push(formatWithElement);
+    let fieldScanner = new FieldScanner(form.elements);
+    for (let i = 0; i < fieldScanner.elements.length; i++) {
+      let element = fieldScanner.elements[i];
+      let info = this.getInfo(element, fieldScanner.fieldDetails);
+      fieldScanner.pushDetail(i, info);
     }
-
-    return fieldDetails;
+    return fieldScanner.trimmedFieldDetail;
   },
 
   /**
