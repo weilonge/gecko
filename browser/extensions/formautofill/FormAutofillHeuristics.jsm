@@ -25,6 +25,7 @@ class FieldScanner {
   constructor(elements, fieldDetails = []) {
     this._elementsWeakRef = Cu.getWeakReference(elements);
     this._fieldDetails = fieldDetails;
+    this._indexParsing = 0;
   }
 
   get fieldDetails() {
@@ -33,6 +34,22 @@ class FieldScanner {
 
   get elements() {
     return this._elementsWeakRef.get();
+  }
+
+  get indexParsing() {
+    return this._indexParsing;
+  }
+
+  set indexParsing(index) {
+    if (index > this.fieldDetails.length) {
+      log.warn("The parsing index is out of range.");
+      index = this.fieldDetails.length;
+    }
+    this._indexParsing = index;
+  }
+
+  get parsingFinished() {
+    return this.indexParsing >= this.elements.length;
   }
 
   pushDetail(elementIndex, info) {
@@ -48,7 +65,7 @@ class FieldScanner {
     };
 
     // Store the association between the field metadata and the element.
-    if (this.hasSameField(info)) {
+    if (this.findSameField(info) != -1) {
       // A field with the same identifier already exists.
       log.debug("Not collecting a field matching another with the same info:", info);
       fieldInfo._duplicated = true;
@@ -57,11 +74,28 @@ class FieldScanner {
     this._fieldDetails.push(fieldInfo);
   }
 
-  hasSameField(info) {
-    return this._fieldDetails.some(f => f.section == info.section &&
-                                   f.addressType == info.addressType &&
-                                   f.contactType == info.contactType &&
-                                   f.fieldName == info.fieldName);
+  updateFieldName(index, fieldName) {
+    this.fieldDetails[index].fieldName = fieldName;
+
+    delete this.fieldDetails[index]._duplicated;
+    let indexSame = this.findSameField(this.fieldDetails[index]);
+    if (indexSame != index && indexSame != -1) {
+      this.fieldDetails[index]._duplicated = true;
+    }
+  }
+
+  prepareForParsing() {
+    if (!this.parsingFinished && this.indexParsing == this.fieldDetails.length) {
+      let element = this.elements[this.indexParsing];
+      this.pushDetail(this.indexParsing, FormAutofillHeuristics.getInfo(element));
+    }
+  }
+
+  findSameField(info) {
+    return this._fieldDetails.findIndex(f => f.section == info.section &&
+                                        f.addressType == info.addressType &&
+                                        f.contactType == info.contactType &&
+                                        f.fieldName == info.fieldName);
   }
 
   get trimmedFieldDetail() {
@@ -97,33 +131,57 @@ this.FormAutofillHeuristics = {
 
   RULES: null,
 
+  _parseAddressFields(fieldScanner) {
+    let parsedFields = false;
+    let fieldDetails = fieldScanner.fieldDetails;
+    let addressLines = ["address-line1", "address-line2", "address-line3"];
+    for (let i = 1; !fieldScanner.parsingFinished && i < (addressLines.length + 1); i++) {
+      // This is for ensuring the next field for parsing is ready.
+      fieldScanner.prepareForParsing();
+
+      let detail = fieldDetails[fieldScanner.indexParsing];
+      if (!addressLines.includes(detail.fieldName)) {
+        // When the field is not related to any address-line[1-3] fields, it
+        // means the parsing process can be terminated.
+        break;
+      }
+      let currentAddressLine = "address-line" + i;
+      fieldScanner.updateFieldName(fieldScanner.indexParsing, currentAddressLine);
+      fieldScanner.indexParsing++;
+      parsedFields = true;
+    }
+
+    return parsedFields;
+  },
+
   getFormInfo(form) {
-    if (form.autocomplete == "off") {
+    if (form.autocomplete == "off" || form.elements.length <= 0) {
       return [];
     }
+
     let fieldScanner = new FieldScanner(form.elements);
-    for (let i = 0; i < fieldScanner.elements.length; i++) {
-      let element = fieldScanner.elements[i];
-      let info = this.getInfo(element, fieldScanner.fieldDetails);
-      fieldScanner.pushDetail(i, info);
+    while (!fieldScanner.parsingFinished) {
+      let parsedAddressFields = this._parseAddressFields(fieldScanner);
+
+      // If there is no any field parsed, the parsing cursor can be moved
+      // forward to the next one.
+      if (!parsedAddressFields) {
+        fieldScanner.indexParsing++;
+      }
     }
     return fieldScanner.trimmedFieldDetail;
   },
 
   /**
    * Get the autocomplete info (e.g. fieldName) determined by the regexp
-   * (this.RULES) matching to a feature string. The result is based on the
-   * existing field names to prevent duplicating predictions
-   * (e.g. address-line[1-3).
+   * (this.RULES) matching to a feature string.
    *
    * @param {string} string a feature string to be determined.
-   * @param {Array<string>} existingFieldNames the array of exising field names
-   *                        in a form.
    * @returns {Object}
    *          Provide the predicting result including the field name.
    *
    */
-  _matchStringToFieldName(string, existingFieldNames) {
+  _matchStringToFieldName(string) {
     let result = {
       fieldName: "",
       section: "",
@@ -140,14 +198,6 @@ this.FormAutofillHeuristics = {
     }
     for (let fieldName of this.FIELD_GROUPS.ADDRESS) {
       if (this.RULES[fieldName].test(string)) {
-        // If "address-line1" or "address-line2" exist already, the string
-        // could be satisfied with "address-line2" or "address-line3".
-        if ((fieldName == "address-line1" &&
-            existingFieldNames.includes("address-line1")) ||
-            (fieldName == "address-line2" &&
-            existingFieldNames.includes("address-line2"))) {
-          continue;
-        }
         result.fieldName = fieldName;
         return result;
       }
@@ -161,7 +211,7 @@ this.FormAutofillHeuristics = {
     return null;
   },
 
-  getInfo(element, fieldDetails) {
+  getInfo(element) {
     if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
       return null;
     }
@@ -190,11 +240,8 @@ this.FormAutofillHeuristics = {
       };
     }
 
-    let existingFieldNames = fieldDetails ? fieldDetails.map(i => i.fieldName) : "";
-
     for (let elementString of [element.id, element.name]) {
-      let fieldNameResult = this._matchStringToFieldName(elementString,
-                                                         existingFieldNames);
+      let fieldNameResult = this._matchStringToFieldName(elementString);
       if (fieldNameResult) {
         return fieldNameResult;
       }
@@ -207,8 +254,7 @@ this.FormAutofillHeuristics = {
     for (let label of labels) {
       let strings = FormAutofillUtils.extractLabelStrings(label);
       for (let string of strings) {
-        let fieldNameResult = this._matchStringToFieldName(string,
-                                                           existingFieldNames);
+        let fieldNameResult = this._matchStringToFieldName(string);
         if (fieldNameResult) {
           return fieldNameResult;
         }
