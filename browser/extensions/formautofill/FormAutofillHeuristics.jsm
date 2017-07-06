@@ -147,7 +147,10 @@ this.FormAutofillHeuristics = {
       "postal-code",
       "country",
     ],
-    TEL: ["tel"],
+    TEL: [
+      "tel-extension",
+      "tel",
+    ],
     EMAIL: ["email"],
   },
 
@@ -201,6 +204,17 @@ this.FormAutofillHeuristics = {
         fieldScanner.updateFieldName(detailStart, GRAMMARS[i][1]);
         fieldScanner.indexParsing++;
         detailStart++;
+        parsedField = true;
+      }
+
+      let nextField = fieldScanner.getFieldDetailByIndex(fieldScanner.indexParsing);
+      if (nextField && nextField.fieldName == "tel") {
+        fieldScanner.updateFieldName(fieldScanner.indexParsing, "tel-extension");
+        fieldScanner.indexParsing++;
+        parsedField = true;
+      }
+      if (nextField && nextField.fieldName == "tel-extension") {
+        fieldScanner.indexParsing++;
         parsedField = true;
       }
     }
@@ -269,9 +283,11 @@ this.FormAutofillHeuristics = {
       result.fieldName = "email";
       return result;
     }
-    if (this.RULES.tel.test(string)) {
-      result.fieldName = "tel";
-      return result;
+    for (let fieldName of this.FIELD_GROUPS.TEL) {
+      if (this.RULES[fieldName].test(string)) {
+        result.fieldName = fieldName;
+        return result;
+      }
     }
     for (let fieldName of this.FIELD_GROUPS.ADDRESS) {
       if (this.RULES[fieldName].test(string)) {
