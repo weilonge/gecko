@@ -50,10 +50,12 @@ class FieldScanner {
 
   getFieldDetailByIndex(index) {
     if (index >= this.elements.length) {
+      dump("\ngetFieldDetail return A\n");
       return null;
     }
 
     if (this.fieldDetails.length > index) {
+      dump("\ngetFieldDetail return B: " + index + " " + this.fieldDetails.length + "\n");
       return this.fieldDetails[index];
     }
 
@@ -64,6 +66,7 @@ class FieldScanner {
       }
     }
 
+    dump("\ngetFieldDetail return C: " + this.fieldDetails.length + "\n");
     return this.fieldDetails[index];
   }
 
@@ -161,7 +164,11 @@ this.FormAutofillHeuristics = {
       let detailStart = fieldScanner.indexParsing;
       let ruleStart = i;
       for (; i < GRAMMARS.length && GRAMMARS[i][0]; i++, detailStart++) {
+        dump("\n_parsePhoneFields A: " + detailStart + "\n");
         let detail = fieldScanner.getFieldDetailByIndex(detailStart);
+        if (detail) {
+          dump("\n_parsePhoneFields B: " + detail.fieldName + "\n");
+        }
         if (!detail || GRAMMARS[i][0] != detail.fieldName) {
           break;
         }
@@ -169,6 +176,7 @@ this.FormAutofillHeuristics = {
         if (element) {
           break;
         }
+        dump("\n_parsePhoneFields C: " + detail.fieldName + " " + element.maxLength + "\n");
         if (GRAMMARS[i][2] && (!element.maxLength || GRAMMARS[i][2] < element.maxLength)) {
           break;
         }
@@ -250,12 +258,16 @@ this.FormAutofillHeuristics = {
 
       // If there is no any field parsed, the parsing cursor can be moved
       // forward to the next one.
+        dump("\nparse phone: " + parsedPhoneFields+ "\n");
+        dump("\nparse address: " + parsedAddressFields+ "\n");
       if (!parsedPhoneFields && !parsedAddressFields) {
         fieldScanner.indexParsing++;
       }
     }
     for (let detail of fieldScanner.fieldDetails) {
-      dump("\n" + detail.fieldName + "\n");
+      if (detail.fieldName) {
+        dump("\n" + detail.fieldName + "\n");
+      }
     }
     return fieldScanner.trimmedFieldDetail;
   },
