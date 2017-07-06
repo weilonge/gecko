@@ -206,6 +206,72 @@ this.FormAutofillHeuristics = {
   RULES: null,
 
   /**
+   * This function tries to match the telephone related fields to the grammar
+   * list to see if there is any valid telephone set and correct their
+   * field names.
+   *
+   * @param {Object} fieldScanner
+   *        The current parsing status for all elements
+   * @returns {boolean}
+   *          Return true if there is any field can be recognized in the parser,
+   *          otherwise false.
+   */
+  _parsePhoneFields(fieldScanner) {
+    let matchingResult;
+
+    const GRAMMARS = this.PHONE_FIELD_GRAMMARS;
+    for (let i = 0; i < GRAMMARS.length; i++) {
+      let detailStart = fieldScanner.indexParsing;
+      let ruleStart = i;
+      for (; i < GRAMMARS.length && GRAMMARS[i][0]; i++, detailStart++) {
+        let detail = fieldScanner.getFieldDetailByIndex(detailStart);
+        if (!detail || GRAMMARS[i][0] != detail.fieldName) {
+          break;
+        }
+        let element = detail.elementWeakRef.get();
+        if (!element) {
+          break;
+        }
+        if (GRAMMARS[i][2] && (!element.maxLength || GRAMMARS[i][2] < element.maxLength)) {
+          break;
+        }
+      }
+      if (i >= GRAMMARS.length) {
+        break;
+      }
+
+      if (!GRAMMARS[i][0]) {
+        matchingResult = {
+          ruleFrom: ruleStart,
+          ruleTo: i,
+        };
+        break;
+      }
+
+      // Fast rewinding to the next rule.
+      for (; i < GRAMMARS.length; i++) {
+        if (!GRAMMARS[i][0]) {
+          break;
+        }
+      }
+    }
+
+    let parsedField = false;
+    if (matchingResult) {
+      let {ruleFrom, ruleTo} = matchingResult;
+      let detailStart = fieldScanner.indexParsing;
+      for (let i = ruleFrom; i < ruleTo; i++) {
+        fieldScanner.updateFieldName(detailStart, GRAMMARS[i][1]);
+        fieldScanner.indexParsing++;
+        detailStart++;
+        parsedField = true;
+      }
+    }
+
+    return parsedField;
+  },
+
+  /**
    * This function tries to find the correct address-line[1-3] sequence and
    * correct their field names.
    *
@@ -240,11 +306,12 @@ this.FormAutofillHeuristics = {
 
     let fieldScanner = new FieldScanner(form.elements);
     while (!fieldScanner.parsingFinished) {
+      let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
 
       // If there is no any field parsed, the parsing cursor can be moved
       // forward to the next one.
-      if (!parsedAddressFields) {
+      if (!parsedPhoneFields && !parsedAddressFields) {
         fieldScanner.indexParsing++;
       }
     }
@@ -366,11 +433,11 @@ this.FormAutofillHeuristics = {
       // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <cc>:3 <ac>:3 <phone>:3 <suffix>:4 (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 3},
-      // {REGEX_PHONE, FIELD_AREA_CODE, 3},
-      // {REGEX_PHONE, FIELD_PHONE, 3},
-      // {REGEX_PHONE, FIELD_SUFFIX, 4},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    ["tel", "tel-country-code", 3],
+    ["tel", "tel-area-code", 3],
+    ["tel", "tel-local-prefix", 3],
+    ["tel", "tel-local-suffix", 4],
+    [null, null, 0],
 
     // Area Code: <ac> Phone: <phone> (- <suffix> (Ext: <ext>)?)?
       // {REGEX_AREA, FIELD_AREA_CODE, 0},
@@ -415,10 +482,10 @@ this.FormAutofillHeuristics = {
       // {REGEX_SEPARATOR, FIELD_NONE, 0},
 
     // Phone: <ac> - <phone>:3 - <suffix>:4 (Ext: <ext>)?
-      // {REGEX_PHONE, FIELD_AREA_CODE, 0},
-      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
-      // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 4},
-      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+    ["tel", "tel-area-code", 0],
+    ["tel", "tel-local-prefix", 3],
+    ["tel", "tel-local-suffix", 4],
+    [null, null, 0],
 
     // Phone: <cc> - <ac> - <phone> (Ext: <ext>)?
       // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
