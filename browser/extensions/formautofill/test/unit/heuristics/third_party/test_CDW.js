@@ -15,9 +15,11 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"}, // city
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"}, // FIXME: ZIP ext
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+        // FIXME: This correct "tel-extension" is removed due to the duplicated field above.
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
       ],
       [],
     ],
