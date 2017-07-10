@@ -56,6 +56,18 @@ FormAutofillHandler.prototype = {
    */
   fieldDetails: null,
 
+  addressFieldDetails: null,
+
+  creditCardFieldDetails: null,
+
+  get isValidAddressForm() {
+    return this.addressFieldDetails.length > FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
+  },
+
+  get isValidCreditCardForm() {
+    return this.creditCardFieldDetails.some(i => i.fieldName == "cc-number");
+  },
+
   /**
    * String of the filled profile's guid.
    */
@@ -95,6 +107,13 @@ FormAutofillHandler.prototype = {
     let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
     log.debug("Collected details on", this.fieldDetails.length, "fields");
+
+    this.addressFieldDetails = this.fieldDetails.filter(
+      detail => FormAutofillUtils.isAddressField(detail.fieldName)
+    );
+    this.creditCardFieldDetails = this.fieldDetails.filter(
+      detail => FormAutofillUtils.isCreditCardField(detail.fieldName)
+    );
   },
 
   getFieldDetailByName(fieldName) {
