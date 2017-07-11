@@ -13,6 +13,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/ObjectUtils.jsm");
 Cu.import("resource://gre/modules/FormLikeFactory.jsm");
 Cu.import("resource://testing-common/MockDocument.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
@@ -149,6 +150,17 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
       });
     });
   });
+}
+
+function objectMatches(object, fields) {
+  let actual = {};
+  for (let key in fields) {
+    if (!object.hasOwnProperty(key)) {
+      return false;
+    }
+    actual[key] = object[key];
+  }
+  return ObjectUtils.deepEqual(actual, fields);
 }
 
 add_task(async function head_initialize() {
