@@ -464,7 +464,7 @@ class AutofillRecords {
     }
 
     // The record is cloned to avoid accidental modifications from outside.
-    let clonedRecord = this._clone(recordFound, {rawData});
+    let clonedRecord = this._clone(recordFound);
     if (rawData) {
       this._stripComputedFields(clonedRecord);
     } else {
@@ -488,7 +488,7 @@ class AutofillRecords {
 
     let records = this._store.data[this._collectionName].filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
-    let clonedRecords = records.map(r => this._clone(r, {rawData}));
+    let clonedRecords = records.map(r => this._clone(r));
     clonedRecords.forEach(record => {
       if (rawData) {
         this._stripComputedFields(record);
@@ -682,6 +682,32 @@ class AutofillRecords {
     this._store.saveSoon();
   }
 
+  /**
+   * Returns the Sync change counter for a given record. Synced records store
+   * additional metadata for tracking changes and resolving merge conflicts.
+   * Deleting a synced record replaces the record with a tombstone.
+   *
+   * This method is exposed only for tests. Other callers shouldn't need to
+   * read or manage the change counter.
+   *
+   * @param   {string} guid
+   *          The GUID of the record or tombstone.
+   * @returns {number}
+   *          The change counter, or -1 if the record doesn't exist or hasn't
+   *          been synced yet.
+   */
+  _getSyncChangeCounter(guid) {
+    let record = this._findByGUID(guid, {includeDeleted: true});
+    if (!record) {
+      return -1;
+    }
+    let sync = this._getSyncMetaData(record);
+    if (!sync) {
+      return -1;
+    }
+    return sync.changeCounter;
+  }
+
   // Used to get, and optionally create, sync metadata. Brand new records will
   // *not* have sync meta-data - it will be created when they are first
   // synced.
@@ -700,14 +726,11 @@ class AutofillRecords {
    * Internal helper functions.
    */
 
-  _clone(record, {rawData = false} = {}) {
-    let result = Object.assign({}, record);
-    if (rawData) {
-      return result;
-    }
-    for (let key of Object.keys(result)) {
-      if (key.startsWith("_")) {
-        delete result[key];
+  _clone(record) {
+    let result = {};
+    for (let key in record) {
+      if (!key.startsWith("_")) {
+        result[key] = record[key];
       }
     }
     return result;
