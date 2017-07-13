@@ -32,7 +32,9 @@ const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
 const AUTOFILL_FIELDS_THRESHOLD = 3;
 
 // Register/unregister a constructor as a factory.
-function AutocompleteFactory() {}
+function AutocompleteFactory() {
+  FormAutofillUtils.defineLazyLogGetter(this, "AutocompleteFactory");
+}
 AutocompleteFactory.prototype = {
   register(targetConstructor) {
     let proto = targetConstructor.prototype;
@@ -46,10 +48,30 @@ AutocompleteFactory.prototype = {
                               proto.contractID, factory);
 
     if (proto.classID2) {
+      this._hasClassID2 = true;
       this._classID2 = proto.classID2;
       registrar.registerFactory(proto.classID2, proto.classDescription,
                                 proto.contractID2, factory);
     }
+  },
+
+  isRegistered() {
+    if (!this._classID || !this._factory) {
+      this.log.debug("==================== A");
+      return false;
+    }
+    let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+    if (!registrar.isCIDRegistered(this._classID)) {
+      this.log.debug("==================== B");
+      return false;
+    }
+    if (this._hasClassID2 &&
+        (!this._classID2 || !registrar.isCIDRegistered(this._classID2))) {
+      this.log.debug("==================== C");
+      return false;
+    }
+    //this.log.debug("==================== D");
+    return true;
   },
 
   unregister() {
@@ -57,6 +79,7 @@ AutocompleteFactory.prototype = {
     registrar.unregisterFactory(this._classID, this._factory);
     if (this._classID2) {
       registrar.unregisterFactory(this._classID2, this._factory);
+      this._hasClassID2 = false;
     }
     this._factory = null;
   },
@@ -170,11 +193,11 @@ let ProfileAutocomplete = {
 
   _lastAutoCompleteResult: null,
   _lastAutoCompleteFocusedInput: null,
-  _registered: false,
+  //_registered: false,
   _factory: null,
 
   ensureRegistered() {
-    if (this._registered) {
+    if (this._factory && this._factory.isRegistered()) {
       return;
     }
 
@@ -182,20 +205,20 @@ let ProfileAutocomplete = {
     this.log.debug("ensureRegistered");
     this._factory = new AutocompleteFactory();
     this._factory.register(AutofillProfileAutoCompleteSearch);
-    this._registered = true;
+    //this._registered = true;
 
     Services.obs.addObserver(this, "autocomplete-will-enter-text");
   },
 
   ensureUnregistered() {
-    if (!this._registered) {
+    if (!this._factory || !this._factory.isRegistered()) {
       return;
     }
 
     this.log.debug("ensureUnregistered");
     this._factory.unregister();
     this._factory = null;
-    this._registered = false;
+    //this._registered = false;
     this._lastAutoCompleteResult = null;
 
     Services.obs.removeObserver(this, "autocomplete-will-enter-text");
@@ -450,6 +473,7 @@ var FormAutofillContent = {
   },
 
   identifyAutofillFields(element) {
+    ProfileAutocomplete.ensureRegistered();
     this.log.debug("identifyAutofillFields:", "" + element.ownerDocument.location);
 
     if (!this.savedFieldNames) {
