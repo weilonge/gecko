@@ -18,6 +18,8 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHeuristics",
                                   "resource://formautofill/FormAutofillHeuristics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MasterPassword",
+                                  "resource://formautofill/MasterPassword.jsm");
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
@@ -155,6 +157,19 @@ FormAutofillHandler.prototype = {
     return this.fieldDetails.find(detail => detail.fieldName == fieldName);
   },
 
+  getFieldDetailsByElement(element) {
+    let fieldDetail = this.fieldDetails.find(
+      detail => detail.elementWeakRef.get() == element
+    );
+    if (FormAutofillUtils.isAddressField(fieldDetail.fieldName)) {
+      return this.address.fieldDetails;
+    }
+    if (FormAutofillUtils.isCreditCardField(fieldDetail.fieldName)) {
+      return this.creditCard.fieldDetails;
+    }
+    return [];
+  },
+
   _cacheValue: {
     allFieldNames: null,
     oneLineStreetAddress: null,
@@ -257,11 +272,47 @@ FormAutofillHandler.prototype = {
    * @param {Object} focusedInput
    *        A focused input element which is skipped for filling.
    */
-  autofillFormFields(profile, focusedInput) {
+  async autofillFormFields(profile, focusedInput) {
+    let focusedDetail = this.fieldDetails.find(
+      detail => detail.elementWeakRef.get() == focusedInput
+    );
+    let fieldDetails;
+    if (FormAutofillUtils.isCreditCardField(focusedDetail.fieldName)) {
+      // When Master Password is enabled by users, the decryption process
+      // should prompt Master Password dialog to get the decrypted credit
+      // card number. Otherwise, the number can be decrypted with the default
+      // password.
+      if (profile["cc-number-encrypted"]) {
+        try {
+          profile["cc-number"] = await MasterPassword.decrypt(profile["cc-number-encrypted"], true);
+        } catch (e) {
+          if (e.result == Cr.NS_ERROR_ABORT) {
+            log.warn("User canceled master password entry");
+            return;
+          }
+          throw e;
+        }
+      }
+      let value = profile[focusedDetail.fieldName];
+      // cc-number filling should happen after the credit card decryption, so
+      // the focused input will be handled in this function rather than
+      // FormFillController.
+      if (focusedInput instanceof Ci.nsIDOMHTMLInputElement && value &&
+        (!focusedInput.value || value.startsWith(focusedInput.value))) {
+        focusedInput.setUserInput(value);
+      }
+      this.creditCard.filledRecordGUID = profile.guid;
+      fieldDetails = this.creditCard.fieldDetails;
+    } else if (FormAutofillUtils.isAddressField(focusedDetail.fieldName)) {
+      this.address.filledRecordGUID = profile.guid;
+      fieldDetails = this.address.fieldDetails;
+    } else {
+      throw new Error("Unknown form fields");
+    }
+
     log.debug("profile in autofillFormFields:", profile);
 
-    this.address.filledRecordGUID = profile.guid;
-    for (let fieldDetail of this.address.fieldDetails) {
+    for (let fieldDetail of fieldDetails) {
       // Avoid filling field value in the following cases:
       // 1. the focused input which is filled in FormFillController.
       // 2. a non-empty input field
@@ -273,13 +324,21 @@ FormAutofillHandler.prototype = {
         continue;
       }
 
+      element.previewValue = "";
+
+      if (element == focusedInput) {
+        this.changeFieldState(fieldDetail, "AUTO_FILLED");
+        continue;
+      }
+
       let value = profile[fieldDetail.fieldName];
       if (element instanceof Ci.nsIDOMHTMLInputElement && !element.value && value) {
-        if (element !== focusedInput) {
-          element.setUserInput(value);
-        }
+        element.setUserInput(value);
         this.changeFieldState(fieldDetail, "AUTO_FILLED");
-      } else if (element instanceof Ci.nsIDOMHTMLSelectElement) {
+        continue;
+      }
+
+      if (element instanceof Ci.nsIDOMHTMLSelectElement) {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
         let option = cache[value] && cache[value].get();
         if (!option) {
@@ -295,23 +354,6 @@ FormAutofillHandler.prototype = {
         // Autofill highlight appears regardless if value is changed or not
         this.changeFieldState(fieldDetail, "AUTO_FILLED");
       }
-
-      // Unlike using setUserInput directly, FormFillController dispatches an
-      // asynchronous "DOMAutoComplete" event with an "input" event follows right
-      // after. So, we need to suppress the first "input" event fired off from
-      // focused input to make sure the latter change handler won't be affected
-      // by auto filling.
-      if (element === focusedInput) {
-        const suppressFirstInputHandler = e => {
-          if (e.isTrusted) {
-            e.stopPropagation();
-            element.removeEventListener("input", suppressFirstInputHandler);
-          }
-        };
-
-        element.addEventListener("input", suppressFirstInputHandler);
-      }
-      element.previewValue = "";
     }
 
     // Handle the highlight style resetting caused by user's correction afterward.
@@ -354,11 +396,21 @@ FormAutofillHandler.prototype = {
    *
    * @param {Object} profile
    *        A profile to be previewed with
+   * @param {Object} focusedInput
+   *        A focused input element for determining credit card or address fields.
    */
-  previewFormFields(profile) {
+  async previewFormFields(profile, focusedInput) {
     log.debug("preview profile in autofillFormFields:", profile);
 
-    for (let fieldDetail of this.address.fieldDetails) {
+    // Always show the decrypted credit card number when Master Password is
+    // disabled.
+    if (profile["cc-number-encrypted"] && !MasterPassword.isEnabled) {
+      profile["cc-number"] = await MasterPassword.decrypt(profile["cc-number-encrypted"], true);
+    }
+
+    let fieldDetails = this.getFieldDetailsByElement(focusedInput);
+
+    for (let fieldDetail of fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       let value = profile[fieldDetail.fieldName] || "";
 
@@ -390,11 +442,15 @@ FormAutofillHandler.prototype = {
 
   /**
    * Clear preview text and background highlight of all fields.
+   *
+   * @param {Object} focusedInput
+   *        A focused input element for determining credit card or address fields.
    */
-  clearPreviewedFormFields() {
+  clearPreviewedFormFields(focusedInput) {
     log.debug("clear previewed fields in:", this.form);
 
-    for (let fieldDetail of this.address.fieldDetails) {
+    let fieldDetails = this.getFieldDetailsByElement(focusedInput);
+    for (let fieldDetail of fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
         log.warn(fieldDetail.fieldName, "is unreachable");
