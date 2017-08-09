@@ -1551,7 +1551,7 @@ class CreditCards extends AutofillRecords {
         throw new Error("Invalid credit card number because length is under 12 digits.");
       }
 
-      creditCard["cc-number-encrypted"] = await MasterPassword.encrypt(creditCard["cc-number"]);
+      creditCard["cc-number-encrypted"] = await MasterPassword.encrypt(ccNumber);
       creditCard["cc-number"] = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
     }
   }
