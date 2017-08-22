@@ -304,6 +304,11 @@ FormAutofillHandler.prototype = {
       this.creditCard.filledRecordGUID = profile.guid;
       fieldDetails = this.creditCard.fieldDetails;
     } else if (FormAutofillUtils.isAddressField(focusedDetail.fieldName)) {
+      let value = profile[focusedDetail.fieldName];
+      if (focusedInput instanceof Ci.nsIDOMHTMLInputElement && value &&
+        (!focusedInput.value || value.startsWith(focusedInput.value))) {
+        focusedInput.setUserInput(value);
+      }
       this.address.filledRecordGUID = profile.guid;
       fieldDetails = this.address.fieldDetails;
     } else {
