@@ -379,18 +379,11 @@ def watchman_info(prog):
     if not prog:
         return
 
-    out = check_cmd_output(prog, 'version', onerror=lambda: None)
+    out = check_cmd_output(prog, '--version', onerror=lambda: None)
     if out is None:
         return
 
-    # Assume a process not emitting JSON is not watchman or is a
-    # broken watchman.
-    try:
-        res = json.loads(out)
-    except ValueError:
-        return
-
-    return namespace(path=prog, version=Version(res['version']))
+    return namespace(path=prog, version=Version(out))
 
 @depends_if(watchman_info)
 @checking('for watchman')
