@@ -317,14 +317,14 @@ FormAutofillHandler.prototype = {
       let value = profile[fieldDetail.fieldName];
 
       if (element instanceof Ci.nsIDOMHTMLInputElement && value) {
-        // For the focused input element, it will be filled with a valid value
-        // anyway.
-        // For the others, the fields should be only filled when their values
-        // are empty.
-        if (element == focusedInput ||
-            (element != focusedInput && !element.value)) {
+        // For any autofilling elements except the focused input, the fields
+        // should be only filled when their values are empty. "focus" and "blur"
+        // events are dispatched for simulating user's manual filling behavior.
+        if (element != focusedInput && !element.value) {
+          element.dispatchEvent(new element.ownerGlobal.FocusEvent("focus", {bubbles: false}));
           element.setUserInput(value);
           this.changeFieldState(fieldDetail, "AUTO_FILLED");
+          element.dispatchEvent(new element.ownerGlobal.FocusEvent("blur", {bubbles: false}));
           continue;
         }
       }
@@ -339,13 +339,22 @@ FormAutofillHandler.prototype = {
         // Use case for multiple select is not considered here.
         if (!option.selected) {
           option.selected = true;
-          element.dispatchEvent(new element.ownerGlobal.UIEvent("input", {bubbles: true}));
+          element.dispatchEvent(new element.ownerGlobal.FocusEvent("focus", {bubbles: false}));
+          element.dispatchEvent(new element.ownerGlobal.InputEvent("input", {bubbles: true}));
           element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
+          element.dispatchEvent(new element.ownerGlobal.FocusEvent("blur", {bubbles: false}));
         }
         // Autofill highlight appears regardless if value is changed or not
         this.changeFieldState(fieldDetail, "AUTO_FILLED");
       }
     }
+
+    // For the focused input element, it will be filled with a valid value
+    // anyway. Before filling a value, `dispatchEvent` is necessary to avoid the
+    // focusing behavior broken.
+    focusedInput.dispatchEvent(new focusedInput.ownerGlobal.FocusEvent("focus", {bubbles: false}));
+    focusedInput.setUserInput(profile[focusedDetail.fieldName]);
+    this.changeFieldState(focusedDetail, "AUTO_FILLED");
 
     // Handle the highlight style resetting caused by user's correction afterward.
     log.debug("register change handler for filled form:", this.form);

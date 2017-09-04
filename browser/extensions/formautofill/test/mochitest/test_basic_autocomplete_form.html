@@ -38,6 +38,12 @@ let MOCK_STORAGE = [{
 function checkElementFilled(element, expectedvalue) {
   return [
     new Promise(resolve => {
+      element.addEventListener("focus", function onFocus() {
+        ok(true, "Checking " + element.name + " field fires focus event");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
       element.addEventListener("input", function onInput() {
         ok(true, "Checking " + element.name + " field fires input event");
         resolve();
@@ -47,6 +53,12 @@ function checkElementFilled(element, expectedvalue) {
       element.addEventListener("change", function onChange() {
         ok(true, "Checking " + element.name + " field fires change event");
         is(element.value, expectedvalue, "Checking " + element.name + " field");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
+      element.addEventListener("blur", function onBlur() {
+        ok(true, "Checking " + element.name + " field fires blur event");
         resolve();
       }, {once: true});
     }),

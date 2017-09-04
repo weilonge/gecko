@@ -521,6 +521,11 @@ function do_test(testcases, testFn) {
         let handlerInfo = handler[testcase.expectedFillingForm];
         handlerInfo.fieldDetails.forEach(field => {
           let element = field.elementWeakRef.get();
+
+          // workaround to fix an undefined error of FocusEvent and InputEvent.
+          element.ownerGlobal.FocusEvent = element.ownerGlobal.UIEvent;
+          element.ownerGlobal.InputEvent = element.ownerGlobal.UIEvent;
+
           if (!testcase.profileData[field.fieldName]) {
             // Avoid waiting for `change` event of a input with a blank value to
             // be filled.
@@ -567,8 +572,10 @@ do_test(TESTCASES_INPUT_UNCHANGED, (testcase, element) => {
       let cleaner;
       let timer = setTimeout(() => {
         let id = element.id;
+        element.removeEventListener("focus", cleaner);
         element.removeEventListener("change", cleaner);
         element.removeEventListener("input", cleaner);
+        element.removeEventListener("blur", cleaner);
         Assert.equal(element.value, testcase.expectedResult[id],
                     "Check no value is changed on the " + id + " field");
         resolve();
@@ -577,8 +584,10 @@ do_test(TESTCASES_INPUT_UNCHANGED, (testcase, element) => {
         clearTimeout(timer);
         reject(`${event.type} event should not fire`);
       };
+      element.addEventListener("focus", cleaner);
       element.addEventListener("change", cleaner);
       element.addEventListener("input", cleaner);
+      element.addEventListener("blur", cleaner);
     }),
   ];
 });
@@ -587,9 +596,21 @@ do_test(TESTCASES_FILL_SELECT, (testcase, element) => {
   let id = element.id;
   return [
     new Promise(resolve => {
+      element.addEventListener("focus", () => {
+        Assert.ok(true, "Checking " + id + " field fires focus event");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
       element.addEventListener("input", () => {
         Assert.equal(element.value, testcase.expectedResult[id],
                     "Check the " + id + " field was filled with correct data");
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
+      element.addEventListener("blur", () => {
+        Assert.ok(true, "Checking " + id + " field fires blur event");
         resolve();
       }, {once: true});
     }),
