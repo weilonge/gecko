@@ -608,7 +608,7 @@ FormAutofillHandler.prototype = {
       let detail = this.getFieldDetailByName("country");
       // Try identifying country field aggressively if it doesn't come from
       // @autocomplete.
-      if (detail._reason != "autocomplete") {
+      if (detail._meta && detail._meta.from != "autocomplete") {
         let countryCode = FormAutofillUtils.identifyCountryCode(address.record.country);
         if (countryCode) {
           address.record.country = countryCode;

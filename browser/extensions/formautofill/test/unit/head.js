@@ -137,7 +137,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
         Assert.equal(formInfo.length, testPattern.expectedResult[formIndex].length, "Expected field count.");
         formInfo.forEach((field, fieldIndex) => {
           let expectedField = testPattern.expectedResult[formIndex][fieldIndex];
-          delete field._reason;
+          delete field._meta;
           expectedField.elementWeakRef = field.elementWeakRef;
           Assert.deepEqual(field, expectedField);
         });

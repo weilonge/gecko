@@ -113,7 +113,11 @@ class FieldScanner {
     let element = this._elements[elementIndex];
     let info = FormAutofillHeuristics.getInfo(element);
     if (!info) {
-      info = {};
+      info = {
+        _meta: {
+          from: "null",
+        },
+      };
     }
     let fieldInfo = {
       section: info.section,
@@ -121,11 +125,8 @@ class FieldScanner {
       contactType: info.contactType,
       fieldName: info.fieldName,
       elementWeakRef: Cu.getWeakReference(element),
+      _meta: info._meta,
     };
-
-    if (info._reason) {
-      fieldInfo._reason = info._reason;
-    }
 
     // Store the association between the field metadata and the element.
     if (this.findSameField(info) != -1) {
@@ -308,7 +309,8 @@ this.FormAutofillHeuristics = {
       let ruleStart = i;
       for (; i < GRAMMARS.length && GRAMMARS[i][0] && fieldScanner.elementExisting(detailStart); i++, detailStart++) {
         let detail = fieldScanner.getFieldDetailByIndex(detailStart);
-        if (!detail || GRAMMARS[i][0] != detail.fieldName || detail._reason == "autocomplete") {
+        if (!detail || GRAMMARS[i][0] != detail.fieldName ||
+            (detail._meta && detail._meta.from == "autocomplete")) {
           break;
         }
         let element = detail.elementWeakRef.get();
@@ -427,6 +429,8 @@ this.FormAutofillHeuristics = {
 
     LabelUtils.clearLabelMap();
 
+    log.debug(fieldScanner.fieldDetails);
+
     if (allowDuplicates) {
       return fieldScanner.fieldDetails;
     }
@@ -443,7 +447,9 @@ this.FormAutofillHeuristics = {
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
     if (info && info.fieldName && info.fieldName != "on" && info.fieldName != "off") {
-      info._reason = "autocomplete";
+      info._meta = {
+        from: "autocomplete",
+      };
       return info;
     }
 
@@ -464,6 +470,10 @@ this.FormAutofillHeuristics = {
         section: "",
         addressType: "",
         contactType: "",
+        _meta : {
+          from: "typeattr",
+          string: element.type,
+        },
       };
     }
 
@@ -509,6 +519,10 @@ this.FormAutofillHeuristics = {
             section: "",
             addressType: "",
             contactType: "",
+            _meta: {
+              from: "regexp",
+              string: string,
+            },
           };
         }
       }
