@@ -734,6 +734,50 @@ const TESTCASES = [
     }],
     expectedOptionElements: [],
   },
+  {
+    description: "Use placeholder to adjust cc-exp format [mm/yy].",
+    document: `<form><input placeholder="mm/yy" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-month": 1,
+      "cc-exp-year": 2025,
+      "cc-exp": "01/25",
+    }],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [mm / yy].",
+    document: `<form><input placeholder="mm / yy" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-month": 1,
+      "cc-exp-year": 2025,
+      "cc-exp": "01/25",
+    }],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [MM / YY].",
+    document: `<form><input placeholder="MM / YY" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-month": 1,
+      "cc-exp-year": 2025,
+      "cc-exp": "01/25",
+    }],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [mm / yyyy].",
+    document: `<form><input placeholder="mm / yyyy" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-month": 1,
+      "cc-exp-year": 2025,
+      "cc-exp": "01/2025",
+    }],
+  },
 ];
 
 for (let testcase of TESTCASES) {

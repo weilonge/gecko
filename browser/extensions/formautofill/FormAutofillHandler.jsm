@@ -351,11 +351,36 @@ FormAutofillHandler.prototype = {
     }
   },
 
+  _creditCardExpDateTransformer(profile) {
+    if (!profile["cc-exp"]) {
+      return;
+    }
+
+    let detail = this.getFieldDetailByName("cc-exp");
+    if (!detail) {
+      return;
+    }
+
+    let element = detail.elementWeakRef.get();
+    if (element.tagName != "INPUT" || !element.placeholder) {
+      return;
+    }
+
+    if (/mm\s*\/\s*yyyy/gi.test(element.placeholder)) {
+      profile["cc-exp"] = String(profile["cc-exp-month"]).padStart(2, "0") + "\/" +
+        profile["cc-exp-year"];
+    } else if (/mm\s*\/\s*yy/gi.test(element.placeholder)) {
+      profile["cc-exp"] = String(profile["cc-exp-month"]).padStart(2, "0") + "\/" +
+        String(profile["cc-exp-year"]).substr(-2);
+    }
+  },
+
   getAdaptedProfiles(originalProfiles) {
     for (let profile of originalProfiles) {
       this._addressTransformer(profile);
       this._telTransformer(profile);
       this._matchSelectOptions(profile);
+      this._creditCardExpDateTransformer(profile);
     }
     return originalProfiles;
   },
