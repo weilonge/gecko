@@ -215,6 +215,8 @@ add_task(async function check_form_autofill_resume() {
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
   })));
+
+  await cleanUpCreditCards();
 });
 
 </script>

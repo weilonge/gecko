@@ -79,6 +79,8 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
   })));
+
+  await cleanUpCreditCards();
 });
 
 </script>
