@@ -1713,6 +1713,7 @@ pref("extensions.formautofill.creditCards.available", false);
 pref("extensions.formautofill.creditCards.enabled", true);
 pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.heuristics.enabled", true);
+pref("extensions.formautofill.section.enabled", false);
 pref("extensions.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.

@@ -186,10 +186,14 @@ FormAutofillHandler.prototype = {
    */
   collectFormFields(allowDuplicates = false) {
     this._cacheValue.allFieldNames = null;
-    let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates);
+    let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates)[0];
     this.fieldDetails = fieldDetails ? fieldDetails : [];
-    log.debug("Collected details on", this.fieldDetails.length, "fields");
-
+    let sections = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates);
+    let allValidDetails = [];
+    for (let fieldDetails of sections) {
+      this._createNewSection(fieldDetails);
+    }
+    /*
     this.address.fieldDetails = this.fieldDetails.filter(
       detail => FormAutofillUtils.isAddressField(detail.fieldName)
     );
@@ -208,6 +212,7 @@ FormAutofillHandler.prototype = {
       log.debug("Invalid credit card form");
       this.creditCard.fieldDetails = [];
     }
+    */
 
     let validDetails = Array.of(...(this.address.fieldDetails),
                                 ...(this.creditCard.fieldDetails));
@@ -218,6 +223,27 @@ FormAutofillHandler.prototype = {
       }
       input.addEventListener("input", this);
     }
+
+    this.fieldDetails = allValidDetails;
+    return allValidDetails;
+  },
+
+  _createNewSection(fieldDetails) {
+    let section = {
+      name: "",
+      fieldDetails: fieldDetails,
+      address: {},
+      creditCards: {},
+    };
+    this.sections.push(section);
+    log.debug("Collected details on", fieldDetails.length, "fields in the section.");
+
+    section.address.fieldDetails = fieldDetails.filter(
+      detail => FormAutofillUtils.isAddressField(detail.fieldName)
+    );
+    section.creditCard.fieldDetails = fieldDetails.filter(
+      detail => FormAutofillUtils.isCreditCardField(detail.fieldName)
+    );
 
     return validDetails;
   },

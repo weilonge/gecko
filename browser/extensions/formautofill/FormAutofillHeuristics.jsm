@@ -20,6 +20,7 @@ this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
+const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";
 
 /**
  * A scanner for traversing all elements in a form and retrieving the field
@@ -523,8 +524,9 @@ this.FormAutofillHeuristics = {
   },
 
   /**
-   * This function should provide all field details of a form. The details
-   * contain the autocomplete info (e.g. fieldName, section, etc).
+   * This function should provide all field details of a form which are placed
+   * in the belonging section. The details contain the autocomplete info
+   * (e.g. fieldName, section, etc).
    *
    * `allowDuplicates` is used for the xpcshell-test purpose currently because
    * the heuristics should be verified that some duplicated elements still can
@@ -535,8 +537,8 @@ this.FormAutofillHeuristics = {
    * @param {boolean} allowDuplicates
    *        true to remain any duplicated field details otherwise to remove the
    *        duplicated ones.
-   * @returns {Array<Object>}
-   *        all field details in the form.
+   * @returns {Array<Array<Object>>}
+   *        all sections within its field details in the form.
    */
   getFormInfo(form, allowDuplicates = false) {
     if (form.elements.length <= 0) {
@@ -558,11 +560,17 @@ this.FormAutofillHeuristics = {
 
     LabelUtils.clearLabelMap();
 
-    if (allowDuplicates) {
-      return fieldScanner.fieldDetails;
+    if (!this._sectionEnabled) {
+      // When the section feature is disabled, `getFormInfo` should provide a
+      // single section result.
+      return [allowDuplicates ? fieldScanner.fieldDetails : fieldScanner.trimmedFieldDetail];
     }
 
-    return fieldScanner.trimmedFieldDetail;
+    return this._groupingFields(fieldScanner, allowDuplicates);
+  },
+
+  _groupingFields(fieldScanner, allowDuplicates) {
+    return [allowDuplicates ? fieldScanner.fieldDetails : fieldScanner.trimmedFieldDetail];
   },
 
   _regExpTableHashValue(...signBits) {
@@ -841,5 +849,13 @@ XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "_prefEnabled", () => {
 
 Services.prefs.addObserver(PREF_HEURISTICS_ENABLED, () => {
   this.FormAutofillHeuristics._prefEnabled = Services.prefs.getBoolPref(PREF_HEURISTICS_ENABLED);
+});
+
+XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "_sectionEnabled", () => {
+  return Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
+});
+
+Services.prefs.addObserver(PREF_SECTION_ENABLED, () => {
+  this.FormAutofillHeuristics._sectionEnabled = Services.prefs.getBoolPref(PREF_SECTION_ENABLED);
 });
 
