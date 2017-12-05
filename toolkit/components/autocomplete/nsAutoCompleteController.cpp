@@ -103,6 +103,7 @@ NS_IMETHODIMP
 nsAutoCompleteController::GetInput(nsIAutoCompleteInput **aInput)
 {
   *aInput = mInput;
+  printf("===========  GetInput  =========== %d %d\n", 1, (void *)mInput);
   NS_IF_ADDREF(*aInput);
   return NS_OK;
 }
@@ -130,6 +131,7 @@ nsAutoCompleteController::SetInitiallySelectedIndex(int32_t aSelectedIndex)
 NS_IMETHODIMP
 nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
 {
+  printf("===========  SetInput  =========== %d %d\n", 1, aInput);
   // Don't do anything if the input isn't changing.
   if (mInput == aInput)
     return NS_OK;
@@ -457,6 +459,7 @@ nsAutoCompleteController::HandleTab()
 NS_IMETHODIMP
 nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
 {
+  printf("===========  HandleKeyNavigation  =========== %d\n", 1);
   // By default, don't cancel the event
   *_retval = false;
 
@@ -916,14 +919,20 @@ NS_IMETHODIMP
 nsAutoCompleteController::Notify(nsITimer *timer)
 {
   mTimer = nullptr;
+  printf("===========  Notify  =========== %d\n", 1);
 
   if (mImmediateSearchesCount == 0) {
     // If there were no immediate searches, BeforeSearches has not yet been
     // called, so do it now.
     nsresult rv = BeforeSearches();
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      printf("===========  Notify  =========== %d\n", 2);
       return rv;
+    }
   }
+
+  printf("===========  Notify  =========== %d\n", 3);
+
   StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED);
   AfterSearches();
   return NS_OK;
@@ -1381,6 +1390,7 @@ nsAutoCompleteController::MaybeCompletePlaceholder()
 nsresult
 nsAutoCompleteController::StartSearches()
 {
+  printf("===========  StartSearches  =========== %d\n", 1);
   // Don't create a new search timer if we're already waiting for one to fire.
   // If we don't check for this, we won't be able to cancel the original timer
   // and may crash when it fires (bug 236659).

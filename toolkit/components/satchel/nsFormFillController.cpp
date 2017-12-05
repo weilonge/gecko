@@ -284,6 +284,7 @@ nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
 {
   int32_t index = GetIndexOfDocShell(aDocShell);
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
+  printf("===========  DetachFromBrowser  =========== %d\n", 1);
 
   // Stop listening for focus events on the domWindow of the docShell
   nsCOMPtr<nsPIDOMWindowOuter> window =
@@ -945,6 +946,7 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
 
   switch (internalEvent->mMessage) {
   case eFocus:
+    printf("===========  HandleEvent  =========== %s\n", "eFocus");
     return Focus(aEvent);
   case eMouseDown:
     return MouseDown(aEvent);
@@ -963,6 +965,7 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
              mController->HandleText(&unused) : NS_OK;
     }
   case eBlur:
+    printf("===========  HandleEvent  =========== %s\n", "eBlur");
     if (mFocusedInput) {
       StopControllingInput();
     }
@@ -986,6 +989,7 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   case ePageHide:
     {
+      printf("===========  HandleEvent  =========== %s\n", "ePageHide");
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(
         aEvent->InternalDOMEvent()->GetTarget());
       if (!doc) {
@@ -1266,16 +1270,19 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 nsresult
 nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
 {
+  printf("===========  MouseDown  =========== %d\n", 1);
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
   if (!mouseEvent) {
     return NS_ERROR_FAILURE;
   }
+  printf("===========  MouseDown  =========== %d\n", 2);
 
   nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(
     aEvent->InternalDOMEvent()->GetTarget());
   if (!targetInput) {
     return NS_OK;
   }
+  printf("===========  MouseDown  =========== %d\n", 3);
 
   int16_t button;
   mouseEvent->GetButton(&button);
@@ -1287,10 +1294,12 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
     mLastRightClickTimeStamp = TimeStamp::Now();
     return NS_OK;
   }
+  printf("===========  MouseDown  =========== %d\n", 4);
 
   if (button != 0) {
     return NS_OK;
   }
+  printf("===========  MouseDown  =========== %d\n", 5);
 
   return ShowPopup();
 }
@@ -1300,15 +1309,18 @@ nsFormFillController::ShowPopup()
 {
   bool isOpen = false;
   GetPopupOpen(&isOpen);
+  printf("===========  ShowPopup  =========== %d\n", 1);
   if (isOpen) {
     return SetPopupOpen(false);
   }
+  printf("===========  ShowPopup  =========== %d\n", 2);
 
   nsCOMPtr<nsIAutoCompleteInput> input;
   mController->GetInput(getter_AddRefs(input));
   if (!input) {
     return NS_OK;
   }
+  printf("===========  ShowPopup  =========== %d\n", 3);
 
   nsAutoString value;
   input->GetTextValue(value);
@@ -1317,12 +1329,15 @@ nsFormFillController::ShowPopup()
     mController->SetSearchString(EmptyString());
     bool unused = false;
     mController->HandleText(&unused);
+    printf("===========  ShowPopup  =========== %d\n", 4);
   } else {
     // Show the popup with the complete result set.  Can't use HandleText()
     // because it doesn't display the popup if the input is blank.
     bool cancel = false;
     mController->HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
+    printf("===========  ShowPopup  =========== %d\n", 5);
   }
+  printf("===========  ShowPopup  =========== %d\n", 6);
 
   return NS_OK;
 }
@@ -1401,6 +1416,7 @@ nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
 void
 nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
 {
+  printf("===========  StartControllingInput  =========== %d\n", 1);
   MOZ_LOG(sLogger, LogLevel::Verbose, ("StartControllingInput for %p", aInput));
   // Make sure we're not still attached to an input
   StopControllingInput();
@@ -1408,6 +1424,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   if (!mController) {
     return;
   }
+  printf("===========  StartControllingInput  =========== %d\n", 2);
 
   // Find the currently focused docShell
   nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(aInput);
@@ -1415,6 +1432,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   if (index < 0) {
     return;
   }
+  printf("===========  StartControllingInput  =========== %d\n", 3);
 
   // Cache the popup for the focused docShell
   mFocusedPopup = mPopups.SafeElementAt(index);
@@ -1423,6 +1441,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   if (!node) {
     return;
   }
+  printf("===========  StartControllingInput  =========== %d\n", 4);
 
   node->AddMutationObserverUnlessExists(this);
   mFocusedInputNode = node;
@@ -1435,13 +1454,16 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
     listNode->AddMutationObserverUnlessExists(this);
     mListNode = listNode;
   }
+  printf("===========  StartControllingInput  =========== %d\n", 5);
 
   mController->SetInput(this);
+  printf("===========  StartControllingInput  =========== %d\n", 6);
 }
 
 void
 nsFormFillController::StopControllingInput()
 {
+  printf("===========  StopControllingInput  =========== %d\n", 1);
   if (mListNode) {
     mListNode->RemoveMutationObserver(this);
     mListNode = nullptr;
