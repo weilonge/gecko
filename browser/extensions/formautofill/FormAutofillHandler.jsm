@@ -417,6 +417,7 @@ class FormAutofillSection {
         // are empty.
         if (element == focusedInput ||
             (element != focusedInput && !element.value)) {
+          element.dispatchEvent(new element.ownerGlobal.FocusEvent("focus", {bubbles: false}));
           element.setUserInput(value);
           this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
