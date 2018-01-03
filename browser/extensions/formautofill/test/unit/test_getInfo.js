@@ -101,7 +101,7 @@ const TESTCASES = [
                <input id="targetElement" type="text">`,
     elementId: "targetElement",
     expectedReturnValue: {
-      fieldName: "address-line1",
+      fieldName: "address-line3",
       section: "",
       addressType: "",
       contactType: "",

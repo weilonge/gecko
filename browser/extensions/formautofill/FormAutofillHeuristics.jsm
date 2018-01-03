@@ -534,15 +534,21 @@ this.FormAutofillHeuristics = {
    */
   _parseAddressFields(fieldScanner) {
     let parsedFields = false;
-    let addressLines = ["address-line1", "address-line2", "address-line3"];
-    for (let i = 0; !fieldScanner.parsingFinished && i < addressLines.length; i++) {
+    let addressLines = ["address-line3", "address-line2", "address-line1"];
+    while (!fieldScanner.parsingFinished) {
       let detail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
       if (!detail || !addressLines.includes(detail.fieldName)) {
         // When the field is not related to any address-line[1-3] fields, it
         // means the parsing process can be terminated.
         break;
       }
-      fieldScanner.updateFieldName(fieldScanner.parsingIndex, addressLines[i]);
+      if (detail._reason == "autocomplete") {
+        fieldScanner.parsingIndex++;
+        continue;
+      }
+      let element = detail.elementWeakRef.get();
+      let matchedFieldName = this._findMatchedFieldNameByStrings([element.id, element.name], addressLines);
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, matchedFieldName);
       fieldScanner.parsingIndex++;
       parsedFields = true;
     }
@@ -858,8 +864,12 @@ this.FormAutofillHeuristics = {
    */
   _findMatchedFieldName(element, regexps) {
     const getElementStrings = this._getElementStrings(element);
+    return this._findMatchedFieldNameByStrings(getElementStrings, regexps);
+  },
+
+  _findMatchedFieldNameByStrings(elementStrings, regexps) {
     for (let regexp of regexps) {
-      for (let string of getElementStrings) {
+      for (let string of elementStrings) {
         // The original regexp "(?<!united )state|county|region|province" for
         // "address-line1" wants to exclude any "united state" string, so the
         // following code is to remove all "united state" string before applying

@@ -64,19 +64,17 @@ var HeuristicsRegExp = {
       "streetaddress|street-address",
       "iu"
     ),
-    "address-line1": new RegExp(
-      "^address$|address[_-]?line(one)?|address1|addr1|street" +
-      "|(?:shipping|billing)address$" +
-      "|strasse|straße|hausnummer|housenumber" + // de-DE
-      "|house.?name" + // en-GB
-      "|direccion|dirección" + // es
-      "|adresse" + // fr-FR
-      "|indirizzo" + // it-IT
-      "|^住所$|住所1" + // ja-JP
-      "|morada|endereço" + // pt-BR, pt-PT
-      "|Адрес" + // ru
-      "|地址" + // zh-CN
-      "|^주소.?$|주소.?1", // ko-KR
+    "address-line3": new RegExp(
+      "address[_-]?line(3|three)|address3|addr3|street|suite|unit" +
+      "|adresszusatz|ergänzende.?angaben" + // de-DE
+      "|direccion3|colonia|adicional" + // es
+      "|addresssuppl|complementnom|appartement" + // fr-FR
+      "|indirizzo3" + // it-IT
+      "|住所3" + // ja-JP
+      "|complemento|addrcomplement" + // pt-BR, pt-PT
+      "|Улица" + // ru
+      "|地址3" + // zh-CN
+      "|주소.?3", // ko-KR
       "iu"
     ),
     "address-line2": new RegExp(
@@ -92,17 +90,19 @@ var HeuristicsRegExp = {
       "|주소.?2", // ko-KR
       "iu"
     ),
-    "address-line3": new RegExp(
-      "address[_-]?line(3|three)|address3|addr3|street|suite|unit" +
-      "|adresszusatz|ergänzende.?angaben" + // de-DE
-      "|direccion3|colonia|adicional" + // es
-      "|addresssuppl|complementnom|appartement" + // fr-FR
-      "|indirizzo3" + // it-IT
-      "|住所3" + // ja-JP
-      "|complemento|addrcomplement" + // pt-BR, pt-PT
-      "|Улица" + // ru
-      "|地址3" + // zh-CN
-      "|주소.?3", // ko-KR
+    "address-line1": new RegExp(
+      "^address$|address[_-]?line(one)?|address1|addr1|street" +
+      "|(?:shipping|billing)address$" +
+      "|strasse|straße|hausnummer|housenumber" + // de-DE
+      "|house.?name" + // en-GB
+      "|direccion|dirección" + // es
+      "|adresse" + // fr-FR
+      "|indirizzo" + // it-IT
+      "|^住所$|住所1" + // ja-JP
+      "|morada|endereço" + // pt-BR, pt-PT
+      "|Адрес" + // ru
+      "|地址" + // zh-CN
+      "|^주소.?$|주소.?1", // ko-KR
       "iu"
     ),
     "address-level2": new RegExp(

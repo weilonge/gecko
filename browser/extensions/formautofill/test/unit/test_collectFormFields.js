@@ -10,13 +10,13 @@ const TESTCASES = [
   {
     description: "Form without autocomplete property",
     document: `<form><input id="given-name"><input id="family-name">
-               <input id="street-addr"><input id="city"><select id="country"></select>
+               <input id="street-address"><input id="city"><select id="country"></select>
                <input id='email'><input id="phone"></form>`,
     sections: [{
       addressFieldDetails: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
@@ -27,13 +27,13 @@ const TESTCASES = [
     validFieldDetails: [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
     ],
-    ids: ["given-name", "family-name", "street-addr", "city", "country", "email", "phone"],
+    ids: ["given-name", "family-name", "street-address", "city", "country", "email", "phone"],
   },
   {
     description: "An address and credit card form with autocomplete properties and 1 token",
