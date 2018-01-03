@@ -115,7 +115,7 @@ this.AutoCompletePopup = {
     switch (topic) {
       case "message-manager-disconnect": {
         if (this.openedPopup) {
-          this.openedPopup.closePopup();
+          //this.openedPopup.closePopup();
         }
         break;
       }

@@ -29,11 +29,14 @@ add_task(async function test_clickInsecureFieldWarning() {
     let warningItem = document.getAnonymousElementByAttribute(popup, "type", "insecureWarning");
     ok(warningItem, "Got warning richlistitem");
 
+    //await new Promise(resolve => setTimeout(resolve, 2000));
     await BrowserTestUtils.waitForCondition(() => !warningItem.collapsed, "Wait for warning to show");
 
+    //await new Promise(resolve => setTimeout(resolve, 2000));
     info("Clicking on warning");
     let supportTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, EXPECTED_SUPPORT_URL);
     EventUtils.synthesizeMouseAtCenter(warningItem, {});
+    //await new Promise(resolve => setTimeout(resolve, 2000));
     let supportTab = await supportTabPromise;
     ok(supportTab, "Support tab opened");
     await BrowserTestUtils.removeTab(supportTab);
