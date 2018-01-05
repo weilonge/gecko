@@ -65,16 +65,10 @@ var HeuristicsRegExp = {
       "iu"
     ),
     "address-line3": new RegExp(
-      "address[_-]?line(3|three)|address3|addr3|street|suite|unit" +
-      "|adresszusatz|ergänzende.?angaben" + // de-DE
-      "|direccion3|colonia|adicional" + // es
-      "|addresssuppl|complementnom|appartement" + // fr-FR
-      "|indirizzo3" + // it-IT
-      "|住所3" + // ja-JP
-      "|complemento|addrcomplement" + // pt-BR, pt-PT
-      "|Улица" + // ru
-      "|地址3" + // zh-CN
-      "|주소.?3", // ko-KR
+      "address.*line[3-9]|address[3-9]|addr[3-9]|street|line[3-9]" +
+      "|municipio" +          // es
+      "|batiment|residence" + // fr-FR
+      "|indirizzo[3-9]",      // it-IT
       "iu"
     ),
     "address-line2": new RegExp(
