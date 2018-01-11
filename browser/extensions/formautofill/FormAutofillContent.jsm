@@ -95,6 +95,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * @param {Object} listener the listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
+    if (FormAutofillContent.identifyAutofillFields(formFillController.focusedInput)) {
+      FormAutofillContent.updateActiveInput();
+    }
     let {activeInput, activeSection, activeFieldDetail, savedFieldNames} = FormAutofillContent;
     this.forceStop = false;
 
@@ -478,7 +481,7 @@ var FormAutofillContent = {
   updateActiveInput(element) {
     element = element || formFillController.focusedInput;
     if (!element) {
-      this._activeItems = {};
+      this.invalidateActiveInput();
       return;
     }
     let handler = this._getFormHandler(element);
@@ -491,6 +494,10 @@ var FormAutofillContent = {
       section: handler ? handler.activeSection : null,
       fieldDetail: null,
     };
+  },
+
+  invalidateActiveInput() {
+    this._activeItems = {};
   },
 
   get activeInput() {
@@ -531,6 +538,16 @@ var FormAutofillContent = {
     return this._activeItems.fieldDetail;
   },
 
+  /**
+   * Give an element and all fields in the related form (or FormLike) will be
+   * recorded in FormAutofillSection objects for filling and other purpose.
+   *
+   * @param {HTMLElement} element
+   *        A element for identifying the possible form fields in its form.
+   *
+   * @returns {boolean}
+   *          True if the section objects are all new created, otherwise false.
+   */
   identifyAutofillFields(element) {
     this.log.debug("identifyAutofillFields:", "" + element.ownerDocument.location);
 
@@ -545,7 +562,7 @@ var FormAutofillContent = {
       formHandler = new FormAutofillHandler(formLike);
     } else if (!formHandler.updateFormIfNeeded(element)) {
       this.log.debug("No control is removed or inserted since last collection.");
-      return;
+      return false;
     }
 
     let validDetails = formHandler.collectFormFields();
@@ -556,6 +573,9 @@ var FormAutofillContent = {
     validDetails.forEach(detail =>
       this._markAsAutofillField(detail.elementWeakRef.get())
     );
+
+    this.invalidateActiveInput();
+    return true;
   },
 
   clearForm() {

@@ -33,13 +33,14 @@ var FormAutofillFrameScript = {
     this._hasPendingTask = true;
 
     setTimeout(() => {
-      FormAutofillContent.identifyAutofillFields(this._nextHandleElement);
+      if (FormAutofillContent.identifyAutofillFields(this._nextHandleElement)) {
+        FormAutofillContent.updateActiveInput();
+      }
       this._hasPendingTask = false;
       this._nextHandleElement = null;
       // This is for testing purpose only which sends a message to indicate that the
       // form has been identified, and ready to open popup.
       sendAsyncMessage("FormAutofill:FieldsIdentified");
-      FormAutofillContent.updateActiveInput();
     });
   },
 

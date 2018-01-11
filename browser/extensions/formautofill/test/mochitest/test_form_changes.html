@@ -56,9 +56,9 @@ async function checkFormChangeHappened(formId) {
   ));
 
   // This is for checking the changes of element count.
+  await focusAndWaitForFieldsIdentified(`#${formId} input[name=name]`, true);
   addInputField(document.querySelector(`#${formId}`), "address-level2");
 
-  await focusAndWaitForFieldsIdentified(`#${formId} input[name=name]`);
   doKey("down");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
